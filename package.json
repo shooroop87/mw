@@ -1,5 +1,5 @@
 {
-  "name": "abroadstours",
+  "name": "milanweek",
   "version": "1.0.0",
   "description": "## 🚀 Запуск проекта локально через Docker",
   "main": "postcss.config.js",
@@ -8,16 +8,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shooroop87/abroadstours.git"
+    "url": "git+https://github.com/shooroop87/milanweek.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/shooroop87/abroadstours/issues"
+    "url": "https://github.com/shooroop87/milanweek/issues"
   },
-  "homepage": "https://github.com/shooroop87/abroadstours#readme",
+  "homepage": "https://github.com/shooroop87/milanweek#readme",
   "devDependencies": {
     "@fullhuman/postcss-purgecss": "^7.0.2",
     "autoprefixer": "^10.4.21",
