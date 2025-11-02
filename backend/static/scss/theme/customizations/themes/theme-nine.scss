@@ -1,0 +1,33 @@
+// Header
+.uc-header.header-nine {
+    .uc-top-navbar .uc-navbar,
+    .uc-center-navbar.uc-navbar,
+    .uc-navbar .uc-logo > * > *,
+    .uc-navbar-nav {
+        transition: all 150ms ease;
+    }
+    &.uc-sticky-below {
+        .uc-center-navbar .uc-navbar {
+            min-height: 80px !important;
+        }
+        .uc-bottom-navbar.uc-navbar {
+            @include dark-prop('background-color', var(--color-primary-100), var(--color-primary));
+            min-height: 48px !important;
+        }
+        .uc-navbar .uc-logo > * > * {
+            width: 100px !important;
+        }
+        .uc-navbar-nav {
+            --uc-nav-height: 48px !important;
+        }
+    }
+}
+
+// Swiper
+.swiper .swiper-pagination-bullet,
+.swiper-pagination-bullet {
+    --swiper-pagination-bullet-horizontal-gap: 0;
+    height: 8px !important;
+    width: 8px !important;
+    border-radius: 8px !important
+}

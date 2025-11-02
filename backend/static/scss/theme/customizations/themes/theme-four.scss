@@ -1,0 +1,17 @@
+.header-four {
+    .uc-center-navbar {
+        box-shadow: 0 0 0;
+        .uc-navbar {
+            transition: all 200ms ease;
+        }
+    }
+    .uc-navbar-sticky {
+        @include dark-prop('background-color', rgba(255, 255, 255, 0.885), rgba(0, 0, 0, 0.834));
+        backdrop-filter: blur(5px);
+        box-shadow: 0 1px 5px -1px rgb(0 0 0 / 10%);
+        .uc-center-navbar .uc-navbar {
+            min-height: 80px !important;
+            transition: all 200ms ease;
+        }
+    }
+}

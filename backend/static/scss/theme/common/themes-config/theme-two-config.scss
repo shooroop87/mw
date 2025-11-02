@@ -1,0 +1,93 @@
+// Template config
+// Please do not edit cause you may lose your changes after next update!
+
+// Base font size by default is : 16px
+$base-font: 1rem;
+$font-primary:                  'Work Sans', 'IBM Plex Sans Arabic', sans-serif;
+$font-secondary:                'Work Sans', 'IBM Plex Sans Arabic', serif; // Eudoxus Sans
+$font-tertiary:                 'Work Sans', 'IBM Plex Sans Arabic', serif;
+$font-serif:                    'Noto Serif Display', 'IBM Plex Sans Arabic', serif;
+
+// Base letter spacing multiplier
+$text-font-spacing: 0;
+$heading-font-spacing: -3;
+
+// Base spacer size by default is : 16px
+$base-spacer: 1rem;
+
+// Enable/Disable Prefix
+$enable-prefix-only:          false;
+
+// Enable/Disable Dark mode
+$enable-dark-mode:            true;
+
+// Enable/Disable Importance
+$enable-important-utilities:  true;
+
+// Layout
+$enable-grid-classes:         true;
+$enable-cssgrid:              true;
+$grid-row-columns:            12;
+$container-padding-x:         32px;
+
+// Design system config map
+$config: (
+    'font': (
+        'text': (
+            'weight': 400,
+        ),
+        'heading': (
+            'weight': 600,
+        ),
+    ),
+    'radius': 8px,
+    'border-size': 1px,
+    'border-color': rgba(131, 131, 131, 0.25),
+    'color': (
+        'primary': #ffa914,
+        'tertiary': #252529,
+        'gray': #5b5b5b,
+    ),
+    'sizes': (
+        'heading': (
+            'display-1':  ('size': $base-font * 16, 'lh': 1, 'lp': calc($base-font * 24 * $heading-font-spacing / 100)),
+            'display-2':  ('size': $base-font * 10, 'lh': 1, 'lp': calc($base-font * 10 * $heading-font-spacing / 100)),
+            'display-3':  ('size': $base-font * 8, 'lh': 1, 'lp': calc($base-font * 8 * $heading-font-spacing / 100)),
+            'display-4':  ('size': $base-font * 6, 'lh': 1, 'lp': calc($base-font * 6 * $heading-font-spacing / 100)),
+            'display-5':  ('size': $base-font * 5, 'lh': 1, 'lp': calc($base-font * 5 * $heading-font-spacing / 100)),
+            'display-6':  ('size': $base-font * 4, 'lh': 1, 'lp': calc($base-font * 4 * $heading-font-spacing / 100)),
+            'h1':       ('size': $base-font * 3, 'lh':  1.1, 'lp': calc($base-font * 3 * $heading-font-spacing / 100)),
+            'h2':       ('size': $base-font * 2.5, 'lh':  1.1, 'lp': calc($base-font * 2 * $heading-font-spacing / 100)),
+            'h3':       ('size': $base-font * 2, 'lh':  1.2, 'lp': calc($base-font * 1.75 * $heading-font-spacing / 100)),
+            'h4':       ('size': $base-font * 1.5, 'lh':  1.2, 'lp': calc($base-font * 1.5 * $heading-font-spacing / 100)),
+            'h5':       ('size': $base-font * 1.25, 'lh':  1.2, 'lp': calc($base-font * 1.25 * $heading-font-spacing / 100)),
+            'h6':       ('size': $base-font, 'lh':  1.2, 'lp': calc($base-font * $heading-font-spacing / 1000) ),
+        ),
+        'text': (
+            '2xs':   ('size': $base-font * 0.75, 'lh': 1.5, 'lp': calc($base-font * 0.75 * $text-font-spacing / 100)),
+            'xs':   ('size': $base-font * 0.875, 'lh': 1.5, 'lp': calc($base-font * 0.875 * $text-font-spacing / 100)),
+            'sm':    ('size': $base-font, 'lh': 1.5, 'lp': calc($base-font * $text-font-spacing / 100)),
+            'md':   ('size': $base-font * 1.125, 'lh': 1.5, 'lp': calc($base-font * 1.125 * $text-font-spacing / 100)),
+            'lg':    ('size': $base-font * 1.25, 'lh': 1.5, 'lp': calc($base-font * 1.25 * $text-font-spacing / 100)),
+            'xl':   ('size': $base-font * 1.5, 'lh': 1.5, 'lp': calc($base-font * 1.5 * $text-font-spacing / 100)),
+            '2xl':  ('size': $base-font * 1.75, 'lh': 1.5, 'lp': calc($base-font * 2 * $text-font-spacing / 100)),
+        ),
+        'button': (
+            '': ('height': 48px, 'px': 1.5rem, 'text': 1rem, 'radius': var(--radius)),
+            '2xs': ('height': 24px, 'px': 1rem, 'text': .875rem, 'radius': var(--radius)),
+            'xs': ('height': 32px, 'px': 1rem, 'text': .875rem, 'radius': var(--radius)),
+            'sm': ('height': 40px, 'px': 1rem, 'text': .875rem, 'radius': var(--radius)),
+            'md': ('height': 48px, 'px': 1.5rem, 'text': 1rem, 'radius': var(--radius)),
+            'lg': ('height': 56px, 'px': 2rem, 'text': 1rem, 'radius': var(--radius)),
+            'xl': ('height': 64px, 'px': 2rem, 'text': 1rem, 'radius': var(--radius)),
+            '2xl': ('height': 80px, 'px': 2rem, 'text': 1rem, 'radius': var(--radius)),
+        ),
+    ),
+    'button': (
+        'font': (
+            'typeface': var(--font-family-primary),
+            'weight': 700,
+        ),
+        'radius': 16px,
+    ),
+);

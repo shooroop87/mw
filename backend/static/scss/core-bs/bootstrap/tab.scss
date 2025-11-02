@@ -1,0 +1,10 @@
+.uc-tab {
+    >*>a {
+        color: currentColor;
+        opacity: 0.6;
+    }
+    >.uc-active>a {
+        color: currentColor;
+        opacity: 1;
+    }
+}

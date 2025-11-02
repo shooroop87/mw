@@ -1,0 +1,43 @@
+// Slider miniposts
+.block-slider {
+    &.block-slider-miniposts .swiper-main {
+        .post-header {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: all 300ms ease-in-out;
+        }
+        .swiper-slide.swiper-slide-active {
+            .post-header {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    }
+}
+.block-slider-miniposts {
+    .swiper-thumbs .swiper-slide {
+        opacity: .5;
+        &-thumb-active {
+            opacity: 1;
+            background: none;
+        }
+    }
+}
+
+.block-layout.slider-thumbs .swiper-thumbs .swiper-wrapper {
+    width: 100% !important
+}
+
+@include md {
+    .block-layout.slider-thumbs .swiper-thumbs .swiper-wrapper {
+        height: calc(350px - 16px - 48px) !important;
+        width: auto !important;
+    }
+}
+
+@include lg {
+    .block-layout.slider-thumbs .swiper-thumbs .swiper-wrapper {
+        height: calc(500px - 16px - 64px) !important;
+        width: auto !important;
+    }
+}
