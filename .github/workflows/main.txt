@@ -1,0 +1,248 @@
+name: Main Milanweek workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13.10
+        env:
+          POSTGRES_USER: milanweek_user
+          POSTGRES_PASSWORD: milanweek_password
+          POSTGRES_DB: milanweek
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OS deps for cairo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config python3-dev libffi-dev
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8==6.0.0 flake8-isort==6.0.0
+          pip install -r ./backend/requirements.txt
+
+      - name: Django tests
+        env:
+          POSTGRES_USER: milanweek_user
+          POSTGRES_PASSWORD: milanweek_password
+          POSTGRES_DB: milanweek
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+        run: |
+          cd backend/
+          # Создаем и применяем миграции для блога перед тестами
+          python manage.py makemigrations core --check
+          python manage.py migrate
+          python manage.py test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: tests # Запускается только после успешного выполнения тестов
+    steps:
+    - name: Prune old Docker images
+      run: |
+        sudo docker system prune -f --all
+    # Очищает неиспользуемые образы, контейнеры и сети. Томов не касается.
+
+# Добавляем новую задачу: деплой приложения
+  build_and_push_to_docker_hub:
+    name: Push Docker image to DockerHub
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Check out the repo
+        # Получение исходного кода из репозитория
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        # Установка сборщика контейнеров Docker
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker 
+        # Авторизация на Docker Hub
+        uses: docker/login-action@v3
+        # При помощи with передаём в action параметры username и password
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN_RW }}
+          # Хорошо ли держать логин и пароль прямо в коде workflow?
+          # Нет, это нехорошо
+      - name: Push to DockerHub
+        # Одновременный билд и пуш образа в Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          # Параметр context: ./backend/ указывает, что нужный Dockerfile 
+          # находится в ./backend/
+          context: ./backend/
+          # Параметр push: true указывает, что образ нужно не только собрать,
+          # но и отправить на Docker Hub
+          push: true
+          # В параметре tags задаётся название и тег для образа.
+          # Для каждого пересобранного образа 
+          # устанавливаем тег latest, чтобы потом
+          # на сервере и в docker-compose.yml не указывать версию
+          tags: egorovdocker/milanweek_backend:latest
+
+#Workflow для Nginx образ с конфигом и отправить его на Docker Hub
+  build_gateway_and_push_to_docker_hub:
+    name: Push gateway Docker image to DockerHub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker 
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN_RW }}
+      - name: Push to DockerHub
+        uses: docker/build-push-action@v6
+        with:
+          context: ./gateway/
+          push: true
+          # Тут вместо username должен быть ваш логин на Docker Hub
+          tags: egorovdocker/milanweek_gateway:latest
+
+#Workflow для обновления проекта на боевом сервере
+  deploy:
+    runs-on: ubuntu-latest
+    needs: 
+      # Дождёмся билда всех образов
+      - build_and_push_to_docker_hub
+      - build_gateway_and_push_to_docker_hub
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+    # Копируем docker-compose.production.yml на продакшен-сервер
+    - name: Copy docker-compose.yml via ssh
+      uses: appleboy/scp-action@master
+    # Передаём параметры для action appleboy/scp-action:
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "docker-compose.production.yml"
+        target: "milanweek"
+    - name: Executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        # Параметр script передаёт в action appleboy/ssh-action команды,
+        # которые нужно выполнить на сервере, 
+        # с которым установлено соединение
+        script: |
+          cd milanweek
+          # Авторизация в Docker Hub
+          echo "${{ secrets.DOCKERHUB_TOKEN_RO }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+          # ОЧИСТКА: удаляем неиспользуемые образы, контейнеры и сети. Томов не касается.
+          sudo docker system prune -f
+          
+          # Выполняет pull образов с Docker Hub
+          sudo docker compose -f docker-compose.production.yml pull
+          
+          # БЕЗОПАСНЫЙ ПЕРЕЗАПУСК: только приложение, БД и Redis остаются работать
+          echo "🔄 Restarting application services..."
+          sudo docker compose -f docker-compose.production.yml up -d --no-deps backend gateway
+          
+          # Ожидание запуска сервисов
+          echo "⏳ Waiting for services to start..."
+          sleep 30
+          
+          # Проверка статуса контейнеров
+          sudo docker compose -f docker-compose.production.yml ps
+          
+          # БЕЗОПАСНАЯ ОЧИСТКА: только неиспользуемые образы и контейнеры, НЕ ТОМА
+          echo "🧹 Safe cleanup (preserving data)..."
+          sudo docker container prune -f
+          sudo docker image prune -f
+          
+          # ОЧИСТКА REDIS НЕ НУЖНА: Redis настроен с автоматической политикой очистки
+          echo "ℹ️ Redis cleanup skipped - automatic cleanup is configured with maxmemory-policy"
+          
+          # Применение всех миграций
+          echo "🔄 Running all migrations..."
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+          
+          # 🌐 Компиляция переводов
+          echo "🌍 Compiling messages..."
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py compilemessages
+          
+          # 📁 Сбор статических файлов
+          echo "📁 Collecting static files..."
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput --clear
+          
+          # 👤 СОЗДАНИЕ СУПЕРПОЛЬЗОВАТЕЛЯ (если не существует)
+          echo "👤 Creating admin user..."
+          sudo docker compose -f docker-compose.production.yml exec \
+            -e DJANGO_SUPERUSER_USERNAME="${{ secrets.ADMIN_USERNAME }}" \
+            -e DJANGO_SUPERUSER_EMAIL="${{ secrets.ADMIN_EMAIL }}" \
+            -e DJANGO_SUPERUSER_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
+            backend python manage.py create_admin || echo "ℹ️ Admin user creation skipped (may already exist)"
+          
+          # 🔍 Проверка здоровья сервисов
+          echo "🔍 Checking service health..."
+          for i in {1..12}; do
+            if sudo docker compose -f docker-compose.production.yml ps --filter "health=healthy" | grep -q "healthy"; then
+              echo "✅ Services are healthy"
+              break
+            fi
+            echo "⏳ Waiting for services to become healthy... ($i/12)"
+            sleep 10
+          done
+          
+          # 🎯 Финальная проверка
+          echo "✅ Deployment completed! Checking final status..."
+          sudo docker compose -f docker-compose.production.yml ps
+          
+          # Проверка логов (последние 20 строк)
+          echo "📋 Recent backend logs:"
+          sudo docker compose -f docker-compose.production.yml logs --tail=20 backend
+
+#Workflow Telegram	  
+  send_message:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: Send message
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          🎉 Деплой milanweek успешно завершен!
+          🔧 Коммит: ${{ github.sha }}
+          👤 Автор: ${{ github.actor }}
+          🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          ✅ Новый блог развернут
+          ✅ Миграции применены  
+          ✅ Админ пользователь создан
+          ✅ Статика собрана
+          ✅ Данные PostgreSQL и Redis сохранены
+          
+          🌐 Сайт готов к работе

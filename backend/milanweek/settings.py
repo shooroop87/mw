@@ -22,8 +22,8 @@ else:
     ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost 127.0.0.1").split()
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.abroadstours.com",
-    "https://abroadstours.com",
+    "https://*.milanweek.ru",
+    "https://milanweek.ru",
     "http://localhost",
     "http://localhost:8000",
     "http://backend-1:8000",
@@ -52,10 +52,9 @@ INSTALLED_APPS = [
     "tinymce",
     "core",
     "blog",
-    "tours",
 ]
-# Работает в связке с django.contrib.sites
-# SITE_ID = 1
+
+SITE_ID = 1
 
 # Dev-only apps
 if DEBUG:
@@ -64,7 +63,6 @@ if DEBUG:
 MIDDLEWARE = [
     "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -183,9 +181,6 @@ else:
         }
     }
 
-# НОВОЕ: Настройки для принуждения обновления браузерного кеша
-# STATIC_CACHE_CONTROL = "public, max-age=3600"  # 1 час вместо года
-
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.getenv("EMAIL_HOST", "your-smtp-server.com")
@@ -193,7 +188,7 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "your-email@domain.com")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "your-password")
-DEFAULT_FROM_EMAIL = "Abroads Tours <noreply@abroadstours.com>"
+DEFAULT_FROM_EMAIL = "Abroads Tours <noreply@milanweek.ru>"
 CONTACT_EMAIL = "abroadstour@gmail.com"
 
 # Контакты
@@ -324,32 +319,17 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "INFO"},
 }
 
-# API ключи для отзывов
-TRIPADVISOR_API_KEY = os.getenv("TRIPADVISOR_API_KEY", "")
-TRIPADVISOR_LOCATION_ID = os.getenv(
-    "TRIPADVISOR_LOCATION_ID", "24938712"
-)  # БЕЗ префикса 'd'
-GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY", "")
-GOOGLE_PLACE_ID = os.getenv("GOOGLE_PLACE_ID", "")
-REVIEWS_CACHE_TIMEOUT = int(os.getenv("REVIEWS_CACHE_TIMEOUT", 86400))
-
 # Parler
 PARLER_LANGUAGES = {
     None: (
         {"code": "en"},
-        {"code": "fr"},
-        {"code": "de"},
-        {"code": "es"},
-        {"code": "nl"},
     ),
-    "default": {"fallbacks": ["en"], "hide_untranslated": False},
+    "default": {"fallbacks": ["ru"], "hide_untranslated": False},
 }
 
 # ===================== DJANGO TINYMCE =====================
 
 # Базовые настройки TinyMCE
-# TINYMCE_API_KEY = 'f80axcxfwy4juoux11elmrxusxzpkbrz85w43nyvug2yta1a'
-# TINYMCE_JS_URL = f"https://cdn.tiny.cloud/1/{TINYMCE_API_KEY}/tinymce/6/tinymce.min.js"
 TINYMCE_JS_URL = "/static/tinymce/tinymce.min.js"
 TINYMCE_COMPRESSOR = False
 TINYMCE_SPELLCHECKER = False
