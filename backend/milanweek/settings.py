@@ -1,4 +1,4 @@
-# config/settings.py - ИСПРАВЛЕНА СТРУКТУРА ШАБЛОНОВ
+# config/settings.py
 import io
 import os
 import sys
@@ -12,27 +12,28 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "1insecure1-1default1")
 
-# DEBUG выключает все виды кэша и сжатия
+# DEBUG
 DEBUG = False
 
 # ALLOWED_HOSTS
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 else:
-    ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost 127.0.0.1").split()
+    ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost 127.0.0.1 217.154.149.73 milanweek.ru www.milanweek.ru").split()
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.milanweek.ru",
-    "https://milanweek.ru",
     "http://localhost",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
     "http://localhost:8000",
-    "http://backend-1:8000",
-    "http://127.0.0.1",
     "http://127.0.0.1:8000",
-    "http://0.0.0.0:8000",
+    "https://milanweek.ru",
+    "https://www.milanweek.ru",
 ]
 
-# Приложения
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# ===========================================
 INSTALLED_APPS = [
     # Django
     "django.contrib.admin",
@@ -41,16 +42,26 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     "django.contrib.sitemaps",
-    # 3rd party
-    "easy_thumbnails",
-    "filer",
-    "mptt",
+    # 3rd party - Auth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    # 3rd party - Other
     "parler",
     "taggit",
     "meta",
     "tinymce",
+    "easy_thumbnails",
+    "filer",
+    "mptt",
+    "crispy_forms",
+    "crispy_bootstrap5",
+    # Local
     "core",
+    "accounts",
     "blog",
 ]
 
@@ -58,19 +69,26 @@ SITE_ID = 1
 
 # Dev-only apps
 if DEBUG:
-    INSTALLED_APPS += ["django_browser_reload"]
+    INSTALLED_APPS += [
+        "django_browser_reload",
+    ]
 
+# ===========================================
+# MIDDLEWARE
+# ===========================================
 MIDDLEWARE = [
-    "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+    "accounts.middleware.OnboardingMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 if DEBUG:
     MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
 
@@ -81,10 +99,8 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            BASE_DIR / "core" / "templates",  # Основные шаблоны
-            BASE_DIR / "blog" / "templates",  # Шаблоны блога
-            BASE_DIR / "tours" / "templates",  # Шаблоны туров
-            BASE_DIR / "templates",  # Общие шаблоны
+            BASE_DIR / "core" / "templates",
+            BASE_DIR / "templates",
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -97,59 +113,169 @@ TEMPLATES = [
                 "django.template.context_processors.media",
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
-                "core.context_processors.default_schema",
-                "core.context_processors.tours_context",
-                "core.context_processors.hero_images",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
+WSGI_APPLICATION = "milanweek.wsgi.application"
 
-# PostgreSQL
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "abroadtours"),
-        "USER": os.getenv("POSTGRES_USER", "abroadtours_user"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-        "HOST": os.getenv("DB_HOST", ""),
-        "PORT": int(os.getenv("DB_PORT", 5432)),
+# ===========================================
+# DATABASE
+# ===========================================
+if os.getenv("DATABASE_URL"):
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.milanweek(default=os.getenv("DATABASE_URL"))
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB", "milanweek"),
+            "USER": os.getenv("POSTGRES_USER", "milanweek_user"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "milanweek_password"),
+            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        }
+    }
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Локальная разработка
+if not os.environ.get('DOCKER_ENV') and any(cmd in sys.argv for cmd in ['runserver', 'migrate', 'makemigrations', 'shell', 'createsuperuser']):
+    DATABASES['default']['HOST'] = 'localhost'
+
+# Cache (Redis)
+if os.environ.get('REDIS_URL'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
+# ===========================================
+# AUTHENTICATION
+# ===========================================
+AUTH_USER_MODEL = "accounts.User"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# ===========================================
+# ALLAUTH - Custom User без username
+# ===========================================
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "first_name*", "last_name*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
+
+# Для email ссылок
+if DEBUG:
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
+else:
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/"
+LOGIN_URL = "/account/login/"
+
+# Google OAuth
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "APP": {
+            "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+            "secret": os.getenv("GOOGLE_CLIENT_SECRET", ""),
+        },
     }
 }
 
-DEFAULT_CHARSET = "utf-8"
-FILE_CHARSET = "utf-8"
+# ===========================================
+# SENDPULSE
+# ===========================================
+SENDPULSE_API_USER_ID = os.getenv("SENDPULSE_API_USER_ID", "")
+SENDPULSE_API_SECRET = os.getenv("SENDPULSE_API_SECRET", "")
+SENDPULSE_FROM_EMAIL = os.getenv("SENDPULSE_FROM_EMAIL", "noreply@milanweek.ru")
+SENDPULSE_FROM_NAME = os.getenv("SENDPULSE_FROM_NAME", "milanweekPerPost")
 
-LANGUAGE_CODE = "en"
-TIME_ZONE = "UTC"
+
+# Allauth Social
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+
+# ===========================================
+# INTERNATIONALIZATION (DE primary, EN secondary)
+# ===========================================
+LANGUAGE_CODE = "ru"
+TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
 LANGUAGES = [
-    ("en", "English"),
-    ("fr", _("French")),
-    ("de", _("German")),
-    ("es", _("Spanish")),
-    ("nl", _("Dutch")),
+    ("ru", _("Russian")),
+    ("en", _("English")),
 ]
 
-LOCALE_PATHS = [BASE_DIR / "core" / "locale"]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
-# Static & media
+PARLER_LANGUAGES = {
+    SITE_ID: (
+        {"code": "ru", "fallbacks": ["ru"], "hide_untranslated": False},
+        {"code": "en", "fallbacks": ["en"], "hide_untranslated": False},
+    ),
+    "default": {
+        "fallbacks": ["ru"],
+        "hide_untranslated": False,
+    },
+}
+
+
+# ===========================================
+# STATIC & MEDIA
+# ===========================================
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "core" / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "collected_static"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Crispy Forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 FILE_UPLOAD_PERMISSIONS = 0o644  # rw-r--r--
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755  # rwxr-xr-x
 
-# Создаем медиа-директорию если не существует
+# Создаем медиа-директорию
 os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # Filer / thumbnails
@@ -163,177 +289,92 @@ THUMBNAIL_PROCESSORS = (
     "easy_thumbnails.processors.filters",
 )
 
-# Отключить строгий режи
-# WHITENOISE_MANIFEST_STRICT = False
-
-# Cache / static storages
-if DEBUG:
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-else:
-    # STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": os.getenv("REDIS_URL", "redis://redis:6379/1"),
-            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
-        }
-    }
-
-# Email
+# ===========================================
+# EMAIL
+# ===========================================
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST", "your-smtp-server.com")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.ionos.de")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "your-email@domain.com")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "your-password")
-DEFAULT_FROM_EMAIL = "Abroads Tours <noreply@milanweek.ru>"
-CONTACT_EMAIL = "abroadstour@gmail.com"
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 
-# Контакты
-CONTACT_PHONE = "+39-339-2168555"
-WHATSAPP_NUMBER = "393392168555"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "milanweekPerPost <service@milanweek.ru>")
 
-# SendPulse
-SENDPULSE_API_USER_ID = os.getenv("SENDPULSE_API_USER_ID", "your-user-id")
-SENDPULSE_API_SECRET = os.getenv("SENDPULSE_API_SECRET", "your-secret")
-SENDPULSE_ADDRESS_BOOK_ID = os.getenv("SENDPULSE_ADDRESS_BOOK_ID", "your-book-id")
+# ===========================================
+# THUMBNAILS (Filer)
+# ===========================================
+THUMBNAIL_HIGH_RESOLUTION = True
+THUMBNAIL_QUALITY = 90
+THUMBNAIL_PROCESSORS = (
+    "easy_thumbnails.processors.colorspace",
+    "easy_thumbnails.processors.autocrop",
+    "easy_thumbnails.processors.scale_and_crop",
+    "filer.thumbnail_processors.scale_and_crop_with_subject_location",
+    "easy_thumbnails.processors.filters",
+)
 
-# SEO / verification
-GOOGLE_ANALYTICS_ID = os.getenv("GA_MEASUREMENT_ID", "GA_MEASUREMENT_ID")
-YANDEX_METRICA_ID = os.getenv("YANDEX_METRICA_ID", "YOUR_YANDEX_ID")
-BING_WEBMASTER_ID = os.getenv("BING_WEBMASTER_ID", "YOUR_BING_ID")
-BING_UET_TAG = os.getenv("BING_UET_TAG", "YOUR_BING_UET_TAG")
-GOOGLE_SITE_VERIFICATION = os.getenv("GOOGLE_SITE_VERIFICATION", "")
-YANDEX_VERIFICATION = os.getenv("YANDEX_VERIFICATION", "")
-BING_SITE_VERIFICATION = os.getenv("BING_SITE_VERIFICATION", "")
+# ===========================================
+# SECURITY (Production only)
+# ===========================================
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
-# hCaptcha
-HCAPTCHA_SITEKEY = os.getenv("HCAPTCHA_SITEKEY", "your-site-key-here")
-HCAPTCHA_SECRET = os.getenv("HCAPTCHA_SECRET", "your-secret-key-here")
-HCAPTCHA_DEFAULT_CONFIG = {"theme": "light", "size": "normal"}
-
-# Misc
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# stdout fix
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-
-LOGS_DIR = BASE_DIR / "logs"
-os.makedirs(LOGS_DIR, exist_ok=True)
+# ===========================================
+# LOGGING
+# ===========================================
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
-            "style": "{",
-        },
-        "simple": {"format": "{levelname} {asctime} {message}", "style": "{"},
-        "detailed": {
-            "format": "🐛 {levelname} [{asctime}] {name} {module}:{lineno} - {message}",
+            "format": "{levelname} {asctime} {module} {message}",
             "style": "{",
         },
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
             "class": "logging.StreamHandler",
-            "formatter": "detailed",
-        },
-        "file_debug": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": LOGS_DIR / "debug.log",
-            "formatter": "detailed",
-        },
-        "media_file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": LOGS_DIR / "media.log",
-            "formatter": "detailed",
-        },
-        "blog_file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": LOGS_DIR / "blog.log",
-            "formatter": "detailed",
-        },
-        "core_file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": LOGS_DIR / "core.log",
-            "formatter": "detailed",
-        },
-        "reviews_file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": LOGS_DIR / "reviews.log",
             "formatter": "verbose",
         },
     },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
     "loggers": {
-        "core.views": {
-            "handlers": ["core_file", "console"],
-            "level": "DEBUG",
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "propagate": False,
-        },
-        "blog": {
-            "handlers": ["blog_file", "console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "blog.models": {
-            "handlers": ["blog_file", "console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "django.core.files": {
-            "handlers": ["media_file", "console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "PIL": {
-            "handlers": ["media_file", "console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "ckeditor": {
-            "handlers": ["media_file", "console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "django.request": {
-            "handlers": ["file_debug", "console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "django": {"handlers": ["file_debug"], "level": "INFO", "propagate": False},
-        "services.multi_reviews_service": {
-            "handlers": ["reviews_file", "console"],
-            "level": "INFO",
-            "propagate": True,
         },
     },
-    "root": {"handlers": ["console"], "level": "INFO"},
-}
-
-# Parler
-PARLER_LANGUAGES = {
-    None: (
-        {"code": "en"},
-    ),
-    "default": {"fallbacks": ["ru"], "hide_untranslated": False},
 }
 
 # ===================== DJANGO TINYMCE =====================
+BLEACH_ALLOWED_TAGS = [
+    'i', 'span',
+]
+
+BLEACH_ALLOWED_ATTRIBUTES = {
+    '*': ['class', 'style', 'title', 'aria-label'],
+    'i': ['class', 'style', 'data-*'],
+    'span': ['class', 'style', 'data-*'],
+}
+
+BLEACH_STRIP = False
 
 # Базовые настройки TinyMCE
 TINYMCE_JS_URL = "/static/tinymce/tinymce.min.js"
 TINYMCE_COMPRESSOR = False
 TINYMCE_SPELLCHECKER = False
-
 
 # Основная конфигурация (аналог CKEditor 5 'default')
 TINYMCE_DEFAULT_CONFIG = {
@@ -343,53 +384,17 @@ TINYMCE_DEFAULT_CONFIG = {
     "plugins": """
         advlist autolink lists link image charmap preview anchor searchreplace 
         visualblocks code fullscreen insertdatetime media table paste code 
-        help wordcount imagetools table lists emoticons codesample nonbreaking pagebreak template
+        help wordcount imagetools table lists emoticons codesample nonbreaking pagebreak
     """,
     "toolbar": """
         undo redo | styles | bold italic underline strikethrough | 
         forecolor backcolor | alignleft aligncenter alignright alignjustify |
         bullist numlist outdent indent | link image media swipergallery | 
-        table | template | removeformat code fullscreen help
+        table | removeformat code fullscreen help
     """,
     "external_plugins": {
         "swipergallery": "/static/tinymce/plugins/swipergallery/plugin.js"
     },
-    "templates": [
-        {
-            "title": "Accordeon (site markup)",
-            "description": "JS accordion with divs",
-            "content": """
-        <div class="accordion -simple row y-gap-20 mt-30 js-accordion">
-        <div class="col-12">
-            <div class="accordion__item px-20 py-15 border-1 rounded-12">
-            <div class="accordion__button d-flex items-center justify-between">
-                <div class="button text-16 text-dark-1">Заголовок секции</div>
-                <div class="accordion__icon size-30 flex-center bg-light-2 rounded-full">
-                <i class="icon-plus text-13"></i><i class="icon-minus text-13"></i>
-                </div>
-            </div>
-            <div class="accordion__content">
-                <div class="pt-20 ck-content">
-                <p class="mt-20">Accordion content. This can include text, tables, images, etc.</p>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-            """,
-        },
-        {
-            "title": "CTA Button",
-            "description": "Centered button",
-            "content": """
-                <p class="mt-30" style="text-align:center">
-                    <a href="#" class="button -md -dark-1 bg-accent-1 text-white" title="..." aria-label="...">
-                        Call to Action
-                    </a>
-                </p>
-            """,
-        },
-    ],
     # Стили для заголовков (аналог heading в CKEditor)
     "style_formats": [
         {"title": "Paragraph", "format": "p", "classes": "mt-20"},
@@ -465,7 +470,7 @@ TINYMCE_DEFAULT_CONFIG = {
     # Контент CSS (стили как в CKEditor)
     "content_css": "/static/css/ckeditor-content.css",
     "content_style": """
-        body {
+        body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 16px;
             line-height: 1.6;
@@ -473,332 +478,29 @@ TINYMCE_DEFAULT_CONFIG = {
             padding: 20px;
         }
     """,
-    # Разрешенные элементы (аналог htmlSupport в CKEditor)
-    "extended_valid_elements": """
-        div[class|style|data-*],
-        span[class|style|data-*],
-        i[class|style|data-*],
-        img[class|src|alt|title|width|height|loading|data-*],
-        a[href|target|rel|class|style|aria-label|aria-*|title],
-        iframe[src|width|height|frameborder|allow|allowfullscreen|title|loading|referrerpolicy],
-        figure[class|data-*],
-        table[class|style|border|cellpadding|cellspacing],
-        td[class|style|colspan|rowspan|data-label],
-        th[class|style|colspan|rowspan|data-label],
-        details[open|class|style|data-*|role|aria-*],
-        summary[class|style|data-*|role|aria-*],
-        ul[class|style|data-*],
-        li[class|style|data-*],
-        p[class|style|data-*|aria-*],
-    """,
-    "valid_classes": {
-        "div": (
-            "table-responsive table-stack stack-item image-gallery gallery-grid gallery-item media accordion-panel "
-            "col-12 accordion__item px-20 py-15 border-1 rounded-12 "
-            "accordion__button d-flex items-center justify-between "
-            "accordion__icon size-30 flex-center bg-light-2 rounded-full "
-            "accordion__content pt-20 ck-content"
-        ),
-        "img": "gallery-image",
-        "table": "compact striped lake-como-table table-normal",
-        "span": "stack-label stack-value stack-header",
-        "h2": "text-30 md:text-24",
-        "p": "mt-20 mt-30 text-center",
-        "i": ("icon-plus text-13" "icon-minus text-13"),
-        "ul": "list-disc mt-20",
-        "ol": "numbered-list mt-20",
-        "details": "accordion -simple row y-gap-20 mt-30 js-accordion",
-        "summary": "button text-16 text-dark-1",
-        "a": "cta-button cta-button-outline button -md -dark-1 bg-accent-1 text-white mt-30",
-    },
-    # Опции
-    "branding": False,
-    "promotion": False,
-    "relative_urls": False,
-    "remove_script_host": False,
-    "convert_urls": True,
-    "cleanup": True,
-    "cleanup_on_startup": True,
-    "paste_as_text": False,
-    "paste_data_images": True,
-    "browser_spellcheck": True,
-    "contextmenu": "link image table",
-}
-TINYMCE_DEFAULT_CONFIG["valid_styles"] = {
-    "*": "text-align,color,background-color,font-size,font-weight,text-decoration,margin,margin-left,margin-right,padding"
-}
-# Конфигурация для блога (аналог CKEditor 5 'blog')
-TINYMCE_BLOG_CONFIG = {
-    "height": 600,
-    "width": "auto",
-    "menubar": "file edit view insert format tools table",
-    "plugins": """
-        advlist autolink lists link image charmap preview anchor searchreplace 
-        visualblocks code fullscreen insertdatetime media table paste code 
-        help wordcount imagetools table lists emoticons codesample nonbreaking pagebreak
-    """,
-    "toolbar": """
-        undo redo | styles | bold italic underline strikethrough | 
-        forecolor backcolor | alignleft aligncenter alignright alignjustify |
-        bullist numlist outdent indent | link image media swipergallery | 
-        table | template | removeformat code fullscreen help
-    """,
-    "external_plugins": {
-        "swipergallery": "/static/tinymce/plugins/swipergallery/plugin.js"
-    },
-    "templates": [
-        {
-            "title": "Accordeon (site markup)",
-            "description": "JS accordion with divs",
-            "content": """
-        <div class="accordion -simple row y-gap-20 mt-30 js-accordion">
-        <div class="col-12">
-            <div class="accordion__item px-20 py-15 border-1 rounded-12">
-            <div class="accordion__button d-flex items-center justify-between">
-                <div class="button text-16 text-dark-1">Заголовок секции</div>
-                <div class="accordion__icon size-30 flex-center bg-light-2 rounded-full">
-                <i class="icon-plus text-13"></i><i class="icon-minus text-13"></i>
-                </div>
-            </div>
-            <div class="accordion__content">
-                <div class="pt-20 ck-content">
-                <p class="mt-20">Accordion content. This can include text, tables, images, etc.</p>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-            """,
-        },
-        {
-            "title": "CTA Button",
-            "description": "Centered button",
-            "content": """
-                <div style="display:flex; justify-content:center; margin-top:30px;">
-                    <a href="#" class="button -md -dark-1 bg-accent-1 text-white" style="width:350px; text-align:center;">
-                        Call to Action
-                    </a>
-                </div>
-            """,
-        },
-    ],
-    # Стили для блога
-    "style_formats": [
-        {"title": "Paragraph", "format": "p", "classes": "mt-20"},
-        {"title": "Heading 1", "format": "h1"},
-        {"title": "Heading 2", "format": "h2", "classes": "text-30 md:text-24"},
-        {"title": "Heading 3", "format": "h3"},
-        {"title": "Heading 4", "format": "h4"},
-        {"title": "Heading 5", "format": "h5"},
-        {"title": "Heading 6", "format": "h6"},
-        {
-            "title": "Numbered List (mt-20)",
-            "selector": "ol",
-            "classes": "numbered-list mt-20",
-        },
-        {
-            "title": "CTA Button",
-            "selector": "a",
-            "classes": "cta-button button -md -dark-1 bg-accent-1 text-white",
-        },
-        {
-            "title": "CTA Outline",
-            "selector": "a",
-            "classes": "cta-button-outline button -outline-accent-1 text-accent-1",
-        },
-    ],
-    # Специальные ссылки для блога (аналог link decorators в CKEditor)
-    "link_class_list": [
-        {"title": "Normal Link", "value": ""},
-        {
-            "title": "CTA Button",
-            "value": "cta-button button -md -dark-1 bg-accent-1 text-white",
-        },
-        {
-            "title": "CTA Button Outline",
-            "value": "cta-button-outline button -outline-accent-1 text-accent-1",
-        },
-        {
-            "title": "WhatsApp Button",
-            "value": "whatsapp-button button -md bg-success-1 text-white",
-        },
-    ],
-    "link_default_target": "_self",
-    "target_list": [
-        {"title": "Same window", "value": "_self"},
-        {"title": "New window", "value": "_blank"},
-    ],
-    # Цвета для блога
-    "color_map": [
-        "000000",
-        "Black",
-        "4D4D4D",
-        "Dark grey",
-        "999999",
-        "Grey",
-        "E6E6E6",
-        "Light grey",
-        "FFFFFF",
-        "White",
-        "E64C4C",
-        "Red",
-        "E6804C",
-        "Orange",
-        "E6E64C",
-        "Yellow",
-        "99E64C",
-        "Light green",
-        "4CE64C",
-        "Green",
-        "4CE699",
-        "Aquamarine",
-        "4CE6E6",
-        "Turquoise",
-        "4C99E6",
-        "Light blue",
-        "4C4CE6",
-        "Blue",
-        "994CE6",
-        "Purple",
-        "E64CE6",
-        "Magenta",
-        "E64C99",
-        "Pink",
-    ],
-    # Изображения
-    "image_advtab": True,
-    "image_caption": True,
-    "automatic_uploads": True,
-    "images_upload_url": "/tinymce/upload/",
-    "file_picker_types": "image",
-    # Таблицы с расширенными настройками
-    "table_toolbar": "tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tablecellprops",
-    "table_appearance_options": True,
-    "table_advtab": True,
-    "table_cell_advtab": True,
-    "table_row_advtab": True,
-    "table_class_list": [
-        {"title": "Default", "value": ""},
-        {"title": "Compact", "value": "compact"},
-        {"title": "Striped", "value": "striped"},
-        {"title": "Lake Como Table", "value": "lake-como-table"},
-    ],
-    # Медиа (аналог mediaEmbed в CKEditor)
-    "media_live_embeds": True,
-    "media_dimensions": True,
-    "media_poster": True,
-    # Контент CSS
-    "content_css": "/static/css/ckeditor-content.css",
-    "content_style": """
-        /* WordPress-подобные стили */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
-            color: #32373c;
-            background: #fff;
-            padding: 20px 24px;
-        }
-        p { margin: 0 0 1em 0; }
-        p.mt-20 { margin-top: 20px; }
-        h1, h2, h3, h4, h5, h6 {
-            color: #23282d;
-            font-weight: 600;
-            margin: 1.5em 0 0.5em 0;
-            line-height: 1.3;
-        }
-        h1 { font-size: 2.2em; margin-top: 1em; }
-        h2 { font-size: 1.8em; }
-        h2.text-30 { font-size: 1.875em; }
-        h3 { font-size: 1.5em; }
-        h4 { font-size: 1.25em; }
-        h5 { font-size: 1.1em; }
-        h6 { font-size: 1em; font-weight: 700; }
-        a { color: #0073aa; text-decoration: none; }
-        a:hover { color: #005177; text-decoration: underline; }
-        blockquote {
-            border-left: 4px solid #0073aa;
-            margin: 1.5em 0;
-            padding: 0 0 0 1em;
-            font-style: italic;
-            color: #666;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin: 1em 0;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 1em 0;
-        }
-        table td, table th {
-            border: 1px solid #e1e1e1;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        table th {
-            background: #f9f9f9;
-            font-weight: 600;
-            color: #23282d;
-        }
-        code {
-            background: #f1f1f1;
-            color: #d63384;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-family: Monaco, Consolas, monospace;
-            font-size: 0.9em;
-        }
-        ul, ol { margin: 1em 0; padding-left: 2em; }
-        li { margin: 0.5em 0; }
-        .cta-button, .cta-button-outline, .whatsapp-button {
-            display: inline-block;
-            padding: 12px 30px;
-            margin: 10px auto;
-            text-align: center;
-        }
-    """,
     # Разрешенные элементы
     "extended_valid_elements": """
         div[class|style|data-*],
         span[class|style|data-*],
         i[class|style|data-*],
+        span[class|style|data-*],
         img[class|src|alt|title|width|height|loading|data-*],
-        a[href|target|rel|class|style|aria-label|aria-*|title],
+        a[href|target|rel|class|style],
         iframe[src|width|height|frameborder|allow|allowfullscreen|title|loading|referrerpolicy],
         figure[class|data-*],
         table[class|style|border|cellpadding|cellspacing],
         td[class|style|colspan|rowspan|data-label],
-        th[class|style|colspan|rowspan|data-label],
-        details[open|class|style|data-*|role|aria-*],
-        summary[class|style|data-*|role|aria-*],
-        ul[class|style|data-*],
-        li[class|style|data-*],
-        p[class|style|data-*|aria-*],
+        th[class|style|colspan|rowspan|data-label]
     """,
     "valid_classes": {
-        "div": (
-            "table-responsive table-stack stack-item image-gallery gallery-grid gallery-item media accordion-panel "
-            "col-12 accordion__item px-20 py-15 border-1 rounded-12 "
-            "accordion__button d-flex items-center justify-between "
-            "accordion__icon size-30 flex-center bg-light-2 rounded-full "
-            "accordion__content pt-20 ck-content"
-        ),
+        "div": "table-responsive,table-stack,stack-item,image-gallery,gallery-grid,gallery-item,media",
         "img": "gallery-image",
-        "table": "compact striped lake-como-table table-normal",
-        "span": "stack-label stack-value stack-header",
-        "h2": "text-30 md:text-24",
-        "p": "mt-20 mt-30 text-center",
-        "i": ("icon-plus text-13" "icon-minus text-13"),
-        "ul": "list-disc mt-20",
-        "ol": "numbered-list mt-20",
-        "details": "accordion -simple row y-gap-20 mt-30 js-accordion",
-        "summary": "button text-16 text-dark-1",
-        "a": "cta-button cta-button-outline button -md -dark-1 bg-accent-1 text-white mt-30",
+        "table": "compact,striped,lake-como-table,table-normal",
+        "span": "stack-label,stack-value,stack-header",
+        "h2": "text-30,md:text-24",
+        "p": "mt-20",
+        "ul": "list-disc,mt-20",
+        "ol": "numbered-list,mt-20",
     },
     # Опции
     "branding": False,
@@ -814,93 +516,6 @@ TINYMCE_BLOG_CONFIG = {
     "contextmenu": "link image table",
 }
 
-# Конфигурация для туров (аналог CKEditor 5 'tour')
-TINYMCE_TOUR_CONFIG = {
-    "height": 600,
-    "width": "auto",
-    "menubar": "file edit view insert format tools table",
-    "plugins": """
-        advlist autolink lists link image charmap preview anchor searchreplace 
-        visualblocks code fullscreen insertdatetime media table paste code 
-        help wordcount imagetools table lists emoticons codesample nonbreaking pagebreak
-    """,
-    "toolbar": """
-        undo redo | styles | bold italic underline strikethrough | 
-        forecolor backcolor | alignleft aligncenter alignright alignjustify |
-        bullist numlist outdent indent | link image media swipergallery | 
-        table | removeformat code fullscreen help
-    """,
-    "external_plugins": {
-        "swipergallery": "/static/tinymce/plugins/swipergallery/plugin.js"
-    },
-    # Стили для туров (упрощенные)
-    "style_formats": [
-        {"title": "Paragraph", "format": "p", "classes": "mt-20"},
-        {"title": "Heading 1", "format": "h1"},
-        {"title": "Heading 2", "format": "h2", "classes": "text-30 md:text-24"},
-        {"title": "Heading 3", "format": "h3"},
-        {"title": "Heading 4", "format": "h4"},
-        {
-            "title": "Numbered List (mt-20)",
-            "selector": "ol",
-            "classes": "numbered-list mt-20",
-        },
-        {
-            "title": "CTA Button",
-            "selector": "a",
-            "classes": "cta-button button -md -dark-1 bg-accent-1 text-white",
-        },
-        {
-            "title": "CTA Outline",
-            "selector": "a",
-            "classes": "cta-button-outline button -outline-accent-1 text-accent-1",
-        },
-    ],
-    # Изображения
-    "image_advtab": True,
-    "automatic_uploads": True,
-    "images_upload_url": "/tinymce/upload/",
-    "file_picker_types": "image",
-    # Таблицы
-    "table_toolbar": "tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol",
-    "table_appearance_options": True,
-    # Медиа
-    "media_live_embeds": True,
-    # Контент CSS (те же стили что и для блога)
-    "content_css": "/static/css/ckeditor-content.css",
-    "content_style": """
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
-            color: #32373c;
-            padding: 20px;
-        }
-        p.mt-20 { margin-top: 20px; }
-        h2.text-30 { font-size: 1.875em; }
-        ol.numbered-list { margin-top: 20px; }
-    """,
-    # Разрешенные элементы
-    "extended_valid_elements": """
-        iframe[src|width|height|frameborder|allow|allowfullscreen|title|loading|referrerpolicy],
-        div[class|data-*],
-        figure[class|data-*],
-        h2[class],
-        p[class],
-        ol[class]
-    """,
-    "valid_classes": {
-        "h2": "text-30,md:text-24",
-        "p": "mt-20",
-        "ol": "numbered-list,mt-20",
-        "figure": "media",
-    },
-    # Опции
-    "branding": False,
-    "promotion": False,
-    "relative_urls": False,
-    "convert_urls": True,
-}
 
 # Настройки загрузки файлов (аналог CKEDITOR_5_UPLOAD_PATH)
 TINYMCE_UPLOAD_PATH = "blog/content/"
@@ -927,152 +542,3 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 IMAGE_QUALITY = 85
 MAX_IMAGE_WIDTH = 1200
 MAX_IMAGE_HEIGHT = 1200
-
-THUMBNAIL_ALIASES = {
-    "": {
-        # Hero и слайдеры главной
-        "hero_mobile": {
-            "size": (640, 360),
-            "crop": "smart",
-            "quality": 80,
-            "format": "WEBP",
-        },
-        "hero_tablet": {
-            "size": (1024, 576),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        "hero_desktop": {
-            "size": (1920, 1080),
-            "crop": "smart",
-            "quality": 90,
-            "format": "WEBP",
-        },
-        # Карточки туров
-        "tour_card_mobile": {
-            "size": (400, 280),
-            "crop": "smart",
-            "quality": 80,
-            "format": "WEBP",
-        },
-        "tour_card_tablet": {
-            "size": (600, 420),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        "tour_card_desktop": {
-            "size": (800, 560),
-            "crop": "smart",
-            "quality": 90,
-            "format": "WEBP",
-        },
-        # Детальная страница тура (галерея)
-        "tour_gallery_mobile": {
-            "size": (480, 320),
-            "crop": "smart",
-            "quality": 80,
-            "format": "WEBP",
-        },
-        "tour_gallery_tablet": {
-            "size": (768, 512),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        "tour_gallery_desktop": {
-            "size": (1200, 800),
-            "crop": "smart",
-            "quality": 90,
-            "format": "WEBP",
-        },
-        "blog_card_mobile": {
-            "size": (400, 300),
-            "crop": "smart",
-            "quality": 80,
-            "format": "WEBP",
-        },
-        "blog_card_tablet": {
-            "size": (600, 450),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        "blog_card_desktop": {
-            "size": (800, 600),
-            "crop": "smart",
-            "quality": 90,
-            "format": "WEBP",
-        },
-        # Блог - детальная страница
-        "blog_hero_mobile": {
-            "size": (640, 400),
-            "crop": "smart",
-            "quality": 80,
-            "format": "WEBP",
-        },
-        "blog_hero_tablet": {
-            "size": (1024, 640),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        "blog_hero_desktop": {
-            "size": (1920, 1200),
-            "crop": "smart",
-            "quality": 90,
-            "format": "WEBP",
-        },
-        # Команда (About page)
-        "team_mobile": {
-            "size": (480, 480),
-            "crop": "smart",
-            "quality": 80,
-            "format": "WEBP",
-        },
-        "team_tablet": {
-            "size": (768, 768),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        "team_desktop": {
-            "size": (1024, 1024),
-            "crop": "smart",
-            "quality": 90,
-            "format": "WEBP",
-        },
-        # Отзывы (Reviews)
-        "review_thumb": {
-            "size": (60, 60),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        "review_avatar": {
-            "size": (100, 100),
-            "crop": "smart",
-            "quality": 85,
-            "format": "WEBP",
-        },
-        # Миниатюры для виджетов
-        "widget_thumb": {
-            "size": (80, 80),
-            "crop": "smart",
-            "quality": 80,
-            "format": "WEBP",
-        },
-        # OG Image для соцсетей
-        "og_image": {
-            "size": (1200, 630),
-            "crop": "smart",
-            "quality": 90,
-            "format": "JPEG",
-        },
-    }
-}
-
-# Включите кэш миниатюр
-THUMBNAIL_CACHE_DIMENSIONS = True
-THUMBNAIL_CACHE = "default"
