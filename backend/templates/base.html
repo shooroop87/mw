@@ -1,0 +1,67 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MilanWeek{% endblock %}</title>
+    
+    {% include "includes/meta.html" %}
+    
+    <meta name="theme-color" content="#2757fd">
+
+    <!-- Preload -->
+    <link rel="preload" href="{% static 'css/unicons.min.css' %}" as="style">
+    <link rel="preload" href="{% static 'css/swiper-bundle.min.css' %}" as="style">
+    <link rel="preload" href="{% static 'js/libs/jquery.min.js' %}" as="script">
+    <link rel="preload" href="{% static 'js/app.js' %}" as="script">
+
+    <!-- App head -->
+    <script src="{% static 'js/app-head-bs.js' %}"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'js/uni-core/css/uni-core.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/unicons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/prettify.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/theme/demo-seven.min.css' %}">
+
+    <!-- Core JS -->
+    <script src="{% static 'js/uni-core/js/uni-core-bundle.min.js' %}"></script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="uni-body panel bg-white text-gray-900 dark:bg-black dark:text-white overflow-x-hidden">
+
+    {% include "includes/modals/search.html" %}
+    {% include "includes/modals/menu.html" %}
+    {% include "includes/modals/cart.html" %}
+    {% include "includes/modals/auth.html" %}
+    {% include "includes/modals/newsletter.html" %}
+    {% include "includes/gdpr.html" %}
+    {% include "includes/back_to_top.html" %}
+    
+    {% include "includes/header.html" %}
+
+    <div id="wrapper" class="wrap overflow-hidden-x">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% include "includes/footer.html" %}
+
+    <!-- Scripts -->
+    <script defer src="{% static 'js/libs/jquery.min.js' %}"></script>
+    <script defer src="{% static 'js/libs/bootstrap.min.js' %}"></script>
+    <script defer src="{% static 'js/libs/anime.min.js' %}"></script>
+    <script defer src="{% static 'js/libs/swiper-bundle.min.js' %}"></script>
+    <script defer src="{% static 'js/libs/scrollmagic.min.js' %}"></script>
+    <script defer src="{% static 'js/helpers/data-attr-helper.js' %}"></script>
+    <script defer src="{% static 'js/helpers/swiper-helper.js' %}"></script>
+    <script defer src="{% static 'js/helpers/anime-helper.js' %}"></script>
+    <script defer src="{% static 'js/helpers/anime-helper-defined-timelines.js' %}"></script>
+    <script defer src="{% static 'js/uikit-components-bs.js' %}"></script>
+    <script defer src="{% static 'js/app.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

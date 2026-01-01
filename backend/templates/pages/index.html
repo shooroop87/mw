@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Главная" %} | MilanWeek{% endblock %}
+
+{% block content %}
+<!-- Hero section с главными статьями -->
+<div class="section panel overflow-hidden border-top">
+    <div class="section-outer panel py-4 lg:py-6">
+        <div class="container max-w-xl">
+            <div class="section-inner panel">
+                <div class="row g-4 xl:g-6">
+                    
+                    <!-- Главная статья (большая) -->
+                    <div class="col-12 lg:col-8">
+                        {% if featured_post %}
+                        <article class="post type-post panel uc-transition-toggle vstack gap-2 h-100">
+                            <div class="post-media panel overflow-hidden ratio ratio-16x9 rounded uc-transition-toggle">
+                                <div class="featured-image bg-gray-25 dark:bg-gray-800 h-100">
+                                    {% if featured_post.image %}
+                                    <img class="media-cover image uc-transition-scale-up uc-transition-opaque" 
+                                         src="{% static 'images/img-fallback.png' %}" 
+                                         data-src="{{ featured_post.image.url }}" 
+                                         alt="{{ featured_post.title }}" 
+                                         data-uc-img="loading: lazy">
+                                    {% else %}
+                                    <img class="media-cover image uc-transition-scale-up uc-transition-opaque" 
+                                         src="{% static 'images/img-fallback.png' %}" 
+                                         alt="{{ featured_post.title }}">
+                                    {% endif %}
+                                </div>
+                                <a href="{{ featured_post.get_absolute_url }}" class="position-cover"></a>
+                            </div>
+                            <div class="post-header panel vstack gap-1">
+                                <div class="post-meta hstack gap-1 fs-7 fw-medium text-uppercase text-primary">
+                                    {% if featured_post.category %}
+                                    <a href="{{ featured_post.category.get_absolute_url }}">{{ featured_post.category.name }}</a>
+                                    {% endif %}
+                                </div>
+                                <h2 class="post-title h3 lg:h2 m-0">
+                                    <a class="text-none hover:text-primary duration-150" href="{{ featured_post.get_absolute_url }}">
+                                        {{ featured_post.title }}
+                                    </a>
+                                </h2>
+                                <p class="fs-6 text-opacity-70 d-none md:d-block">{{ featured_post.excerpt|truncatewords:25 }}</p>
+                                <div class="post-meta hstack gap-2 fs-7 text-gray-500 dark:text-gray-300">
+                                    <span>{{ featured_post.published_at|date:"d M Y" }}</span>
+                                    <span>·</span>
+                                    <span>{{ featured_post.reading_time }} {% trans "мин чтения" %}</span>
+                                </div>
+                            </div>
+                        </article>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Боковые статьи (маленькие) -->
+                    <div class="col-12 lg:col-4">
+                        <div class="vstack gap-4">
+                            {% for post in sidebar_posts %}
+                            <article class="post type-post panel uc-transition-toggle">
+                                <div class="row g-3">
+                                    <div class="col-5">
+                                        <div class="post-media panel overflow-hidden ratio ratio-1x1 rounded">
+                                            <div class="featured-image bg-gray-25 dark:bg-gray-800">
+                                                {% if post.image %}
+                                                <img class="media-cover image uc-transition-scale-up uc-transition-opaque" 
+                                                     src="{% static 'images/img-fallback.png' %}" 
+                                                     data-src="{{ post.image.url }}" 
+                                                     alt="{{ post.title }}" 
+                                                     data-uc-img="loading: lazy">
+                                                {% else %}
+                                                <img class="media-cover image" src="{% static 'images/img-fallback.png' %}" alt="{{ post.title }}">
+                                                {% endif %}
+                                            </div>
+                                            <a href="{{ post.get_absolute_url }}" class="position-cover"></a>
+                                        </div>
+                                    </div>
+                                    <div class="col-7">
+                                        <div class="post-header panel vstack gap-1">
+                                            <div class="post-meta fs-7 fw-medium text-uppercase text-primary">
+                                                {% if post.category %}
+                                                <a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a>
+                                                {% endif %}
+                                            </div>
+                                            <h3 class="post-title h6 m-0 text-truncate-2">
+                                                <a class="text-none hover:text-primary duration-150" href="{{ post.get_absolute_url }}">
+                                                    {{ post.title }}
+                                                </a>
+                                            </h3>
+                                            <div class="post-meta fs-7 text-gray-500">
+                                                {{ post.published_at|date:"d M Y" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                            {% empty %}
+                            <p class="text-gray-500">{% trans "Нет статей" %}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Последние статьи -->
+<div class="section panel">
+    <div class="section-outer panel py-4 lg:py-6">
+        <div class="container max-w-xl">
+            <div class="section-inner panel vstack gap-4">
+                
+                <!-- Заголовок секции -->
+                <div class="section-header panel">
+                    <div class="hstack justify-between items-center">
+                        <h2 class="h4 lg:h3 m-0">{% trans "Последние публикации" %}</h2>
+                        <a href="{% url 'blog:post_list' %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                            {% trans "Все статьи" %}
+                            <i class="icon-1 unicon-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Сетка статей -->
+                <div class="row g-4">
+                    {% for post in latest_posts %}
+                    <div class="col-12 sm:col-6 lg:col-4">
+                        <article class="post type-post panel uc-transition-toggle vstack gap-2 h-100">
+                            <div class="post-media panel overflow-hidden ratio ratio-16x9 rounded">
+                                <div class="featured-image bg-gray-25 dark:bg-gray-800">
+                                    {% if post.image %}
+                                    <img class="media-cover image uc-transition-scale-up uc-transition-opaque" 
+                                         src="{% static 'images/img-fallback.png' %}" 
+                                         data-src="{{ post.image.url }}" 
+                                         alt="{{ post.title }}" 
+                                         data-uc-img="loading: lazy">
+                                    {% else %}
+                                    <img class="media-cover image" src="{% static 'images/img-fallback.png' %}" alt="{{ post.title }}">
+                                    {% endif %}
+                                </div>
+                                <a href="{{ post.get_absolute_url }}" class="position-cover"></a>
+                            </div>
+                            <div class="post-header panel vstack gap-1 flex-1">
+                                <div class="post-meta fs-7 fw-medium text-uppercase text-primary">
+                                    {% if post.category %}
+                                    <a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a>
+                                    {% endif %}
+                                </div>
+                                <h3 class="post-title h5 m-0 text-truncate-2">
+                                    <a class="text-none hover:text-primary duration-150" href="{{ post.get_absolute_url }}">
+                                        {{ post.title }}
+                                    </a>
+                                </h3>
+                                <p class="fs-7 text-gray-500 text-truncate-2 d-none sm:d-block">{{ post.excerpt|truncatewords:15 }}</p>
+                                <div class="post-meta mt-auto pt-2 hstack gap-2 fs-7 text-gray-500">
+                                    <span>{{ post.published_at|date:"d M Y" }}</span>
+                                    <span>·</span>
+                                    <span>{{ post.reading_time }} {% trans "мин" %}</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <p class="text-center text-gray-500 py-4">{% trans "Пока нет публикаций" %}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Статьи по категориям -->
+{% for category in categories_with_posts %}
+<div class="section panel">
+    <div class="section-outer panel py-4 lg:py-6 border-top">
+        <div class="container max-w-xl">
+            <div class="section-inner panel vstack gap-4">
+                
+                <!-- Заголовок категории -->
+                <div class="section-header panel">
+                    <div class="hstack justify-between items-center">
+                        <h2 class="h4 lg:h3 m-0">{{ category.name }}</h2>
+                        <a href="{{ category.get_absolute_url }}" class="btn btn-sm btn-outline-gray-500 rounded-pill">
+                            {% trans "Ещё" %}
+                            <i class="icon-1 unicon-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Статьи категории -->
+                <div class="row g-4">
+                    {% for post in category.posts_preview %}
+                    <div class="col-12 sm:col-6 lg:col-3">
+                        <article class="post type-post panel uc-transition-toggle vstack gap-2 h-100">
+                            <div class="post-media panel overflow-hidden ratio ratio-16x9 rounded">
+                                <div class="featured-image bg-gray-25 dark:bg-gray-800">
+                                    {% if post.image %}
+                                    <img class="media-cover image uc-transition-scale-up uc-transition-opaque" 
+                                         src="{% static 'images/img-fallback.png' %}" 
+                                         data-src="{{ post.image.url }}" 
+                                         alt="{{ post.title }}" 
+                                         data-uc-img="loading: lazy">
+                                    {% else %}
+                                    <img class="media-cover image" src="{% static 'images/img-fallback.png' %}" alt="{{ post.title }}">
+                                    {% endif %}
+                                </div>
+                                <a href="{{ post.get_absolute_url }}" class="position-cover"></a>
+                            </div>
+                            <div class="post-header panel vstack gap-1">
+                                <h3 class="post-title h6 m-0 text-truncate-2">
+                                    <a class="text-none hover:text-primary duration-150" href="{{ post.get_absolute_url }}">
+                                        {{ post.title }}
+                                    </a>
+                                </h3>
+                                <div class="post-meta fs-7 text-gray-500">
+                                    {{ post.published_at|date:"d M Y" }}
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Newsletter секция -->
+<div class="section panel">
+    <div class="section-outer panel py-6 lg:py-8 bg-gray-100 dark:bg-gray-800">
+        <div class="container max-w-lg">
+            <div class="section-inner panel vstack gap-4 text-center">
+                <div class="vstack gap-2">
+                    <h2 class="h3 lg:h2 m-0">{% trans "Подпишитесь на рассылку" %}</h2>
+                    <p class="fs-5 text-gray-500 dark:text-gray-300">{% trans "Лучшие статьи о жизни в Милане — раз в неделю на вашу почту" %}</p>
+                </div>
+                <form class="hstack gap-2 justify-center max-w-400px mx-auto w-100" method="post" action="{% url 'core:newsletter_subscribe' %}">
+                    {% csrf_token %}
+                    <input type="email" name="email" class="form-control" placeholder="{% trans 'Ваш email' %}" required>
+                    <button type="submit" class="btn btn-primary">{% trans "Подписаться" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

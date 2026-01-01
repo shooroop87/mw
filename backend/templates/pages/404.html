@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Страница не найдена" %} | MilanWeek{% endblock %}
+
+{% block content %}
+<div class="section panel">
+    <div class="section-outer panel py-6 lg:py-9">
+        <div class="container max-w-md">
+            <div class="section-inner panel vstack gap-4 text-center">
+                <div class="panel">
+                    <span class="display-1 fw-bold text-primary">404</span>
+                </div>
+                <div class="vstack gap-2">
+                    <h1 class="h2 lg:h1 m-0">{% trans "Страница не найдена" %}</h1>
+                    <p class="fs-5 text-gray-500 dark:text-gray-300">
+                        {% trans "К сожалению, запрашиваемая страница не существует или была перемещена." %}
+                    </p>
+                </div>
+                <div class="hstack gap-2 justify-center">
+                    <a href="{% url 'core:home' %}" class="btn btn-primary">
+                        <i class="icon-1 unicon-home me-1"></i>
+                        {% trans "На главную" %}
+                    </a>
+                    <a href="{% url 'blog:post_list' %}" class="btn btn-outline-gray-500">
+                        {% trans "Все статьи" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

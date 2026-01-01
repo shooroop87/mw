@@ -1,0 +1,30 @@
+{% load static %}
+
+<meta name="description" content="{% block meta_description %}{{ meta_description|default:'MilanWeek — русскоязычный журнал о жизни в Милане и Ломбардии. Практичные гайды, аналитика, советы для экспатов.' }}{% endblock %}">
+<meta name="keywords" content="Милан, Ломбардия, Италия, экспаты, релокация, жизнь в Италии">
+<meta name="author" content="MilanWeek">
+<meta name="robots" content="index, follow">
+
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="ru_RU">
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:title" content="{% block og_title %}{{ page_title|default:'MilanWeek' }}{% endblock %}">
+<meta property="og:description" content="{{ meta_description|default:'Русскоязычный журнал о жизни в Милане' }}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:site_name" content="MilanWeek">
+<meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endblock %}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ page_title|default:'MilanWeek' }}">
+<meta name="twitter:description" content="{{ meta_description|default:'Русскоязычный журнал о жизни в Милане' }}">
+<meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endblock %}">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+<link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
+<link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">

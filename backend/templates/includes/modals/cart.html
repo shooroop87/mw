@@ -1,0 +1,81 @@
+{% load static i18n %}
+
+<div id="uc-cart-panel" data-uc-offcanvas="overlay: true; flip: true;">
+    <div class="uc-offcanvas-bar bg-white text-dark dark:bg-gray-900 dark:text-white">
+        <button class="uc-offcanvas-close top-0 end-0 m-2 p-0 border-0 icon-2 btn dark:text-white transition-transform duration-150 hover:rotate-90" type="button">
+            <i class="unicon-close"></i>
+        </button>
+
+        <div class="panel vstack h-100">
+            <!-- Заголовок -->
+            <div class="panel border-bottom pb-3">
+                <h3 class="h5 m-0">
+                    <i class="unicon-bookmark me-1"></i>
+                    {% trans "Избранное" %}
+                </h3>
+            </div>
+            
+            <!-- Список избранных -->
+            <div class="panel flex-1 my-3 overflow-auto">
+                {% if user.is_authenticated and bookmarked_posts %}
+                <div class="vstack gap-3">
+                    {% for post in bookmarked_posts %}
+                    <article class="post type-post panel">
+                        <div class="hstack gap-2">
+                            <figure class="featured-image m-0 ratio ratio-1x1 w-64px rounded overflow-hidden bg-gray-25 dark:bg-gray-800">
+                                {% if post.image %}
+                                <img class="media-cover image" src="{{ post.image.url }}" alt="{{ post.title }}">
+                                {% else %}
+                                <img class="media-cover image" src="{% static 'images/img-fallback.png' %}" alt="{{ post.title }}">
+                                {% endif %}
+                                <a href="{{ post.get_absolute_url }}" class="position-cover"></a>
+                            </figure>
+                            <div class="content vstack gap-narrow flex-1">
+                                <h5 class="h6 m-0 text-truncate-2">
+                                    <a class="text-none text-dark dark:text-white" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                                </h5>
+                                <div class="hstack gap-1 fs-7 text-gray-500">
+                                    <span>{{ post.reading_time }} {% trans "мин" %}</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm p-1 text-gray-400 hover:text-danger" 
+                                    data-action="remove-bookmark" 
+                                    data-post-id="{{ post.id }}"
+                                    title="{% trans 'Удалить' %}">
+                                <i class="unicon-close icon-1"></i>
+                            </button>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="panel vstack justify-center items-center gap-2 text-center h-100">
+                    <i class="unicon-bookmark icon-4 text-gray-300"></i>
+                    <p class="fs-6 text-gray-500 m-0">{% trans "Нет сохранённых статей" %}</p>
+                    {% if not user.is_authenticated %}
+                    <p class="fs-7 text-gray-400">{% trans "Войдите, чтобы сохранять статьи" %}</p>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-primary mt-2">{% trans "Войти" %}</a>
+                    {% else %}
+                    <a href="{% url 'blog:post_list' %}" class="btn btn-sm btn-outline-primary mt-2">{% trans "К статьям" %}</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Нижняя часть -->
+            {% if user.is_authenticated and bookmarked_posts %}
+            <div class="panel border-top pt-3">
+                <div class="vstack gap-2">
+                    <div class="hstack justify-between fs-6">
+                        <span class="text-gray-500">{% trans "Сохранено статей:" %}</span>
+                        <span class="fw-medium">{{ bookmarked_posts.count }}</span>
+                    </div>
+                    <a href="{% url 'accounts:bookmarks' %}" class="btn btn-primary w-100">
+                        {% trans "Все избранные" %}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

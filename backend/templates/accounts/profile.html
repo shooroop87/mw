@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Профиль" %} | MilanWeek{% endblock %}
+
+{% block content %}
+<!-- Breadcrumbs -->
+<div class="breadcrumbs panel z-1 py-2 bg-gray-25 dark:bg-gray-100 dark:bg-opacity-5">
+    <div class="container max-w-xl">
+        <ul class="breadcrumb nav-x justify-center gap-1 fs-7 sm:fs-6 m-0">
+            <li><a href="{% url 'core:home' %}">{% trans "Главная" %}</a></li>
+            <li><i class="unicon-chevron-right opacity-50"></i></li>
+            <li><span class="opacity-50">{% trans "Профиль" %}</span></li>
+        </ul>
+    </div>
+</div>
+
+<div class="section panel py-4 lg:py-6">
+    <div class="container max-w-lg">
+        <div class="panel vstack gap-4 lg:gap-6">
+            
+            <!-- Заголовок -->
+            <header class="page-header panel">
+                <h1 class="h3 lg:h2 m-0">{% trans "Мой профиль" %}</h1>
+            </header>
+            
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} fs-6">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row g-4">
+                
+                <!-- Левая колонка - информация -->
+                <div class="col-12 lg:col-4">
+                    <div class="panel p-4 bg-gray-25 dark:bg-gray-800 rounded vstack gap-3 text-center">
+                        <!-- Аватар -->
+                        <div class="panel">
+                            {% if user.avatar %}
+                            <img class="w-120px h-120px rounded-circle mx-auto" src="{{ user.avatar.url }}" alt="{{ user.get_full_name }}">
+                            {% else %}
+                            <span class="w-120px h-120px rounded-circle bg-gray-200 dark:bg-gray-700 cstack mx-auto">
+                                <i class="unicon-user-avatar icon-4"></i>
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Имя -->
+                        <div>
+                            <h2 class="h5 m-0">{{ user.get_full_name|default:user.email }}</h2>
+                            <p class="fs-7 text-gray-500 m-0">{{ user.email }}</p>
+                        </div>
+                        
+                        <!-- Статус подписки -->
+                        <div class="panel p-3 bg-white dark:bg-gray-900 rounded">
+                            {% if user.has_active_subscription %}
+                            <span class="badge bg-success text-white px-2 py-1 fs-7">{% trans "Премиум" %}</span>
+                            <p class="fs-7 text-gray-500 mt-2 mb-0">
+                                {% trans "Активна до:" %} {{ user.subscription_end_date|date:"d.m.Y" }}
+                            </p>
+                            {% else %}
+                            <span class="badge bg-gray-300 text-gray-700 px-2 py-1 fs-7">{% trans "Бесплатный" %}</span>
+                            <p class="fs-7 text-gray-500 mt-2 mb-0">
+                                {% trans "Прочитано статей:" %} {{ user.articles_read_count }}/3
+                            </p>
+                            <a href="{% url 'accounts:subscription' %}" class="btn btn-sm btn-primary w-100 mt-2">
+                                {% trans "Оформить подписку" %}
+                            </a>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Дата регистрации -->
+                        <p class="fs-7 text-gray-500 m-0">
+                            {% trans "На сайте с" %} {{ user.date_joined|date:"d.m.Y" }}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Правая колонка - формы -->
+                <div class="col-12 lg:col-8">
+                    <div class="panel vstack gap-4">
+                        
+                        <!-- Редактирование профиля -->
+                        <div class="panel p-4 bg-gray-25 dark:bg-gray-800 rounded">
+                            <h3 class="h5 mb-3">{% trans "Личные данные" %}</h3>
+                            <form method="post" action="{% url 'accounts:profile_update' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <div class="vstack gap-3">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="form-group">
+                                                <label class="form-label fs-6 fw-medium" for="first_name">{% trans "Имя" %}</label>
+                                                <input type="text" name="first_name" id="first_name" class="form-control" value="{{ user.first_name }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-group">
+                                                <label class="form-label fs-6 fw-medium" for="last_name">{% trans "Фамилия" %}</label>
+                                                <input type="text" name="last_name" id="last_name" class="form-control" value="{{ user.last_name }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label fs-6 fw-medium" for="email">{% trans "Email" %}</label>
+                                        <input type="email" name="email" id="email" class="form-control" value="{{ user.email }}" disabled>
+                                        <p class="fs-7 text-gray-500 mt-1">{% trans "Email нельзя изменить" %}</p>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label fs-6 fw-medium" for="bio">{% trans "О себе" %}</label>
+                                        <textarea name="bio" id="bio" class="form-control" rows="3" placeholder="{% trans 'Расскажите о себе...' %}">{{ user.bio }}</textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label fs-6 fw-medium" for="avatar">{% trans "Фото профиля" %}</label>
+                                        <input type="file" name="avatar" id="avatar" class="form-control" accept="image/*">
+                                    </div>
+                                    
+                                    <div class="hstack justify-end">
+                                        <button type="submit" class="btn btn-primary">{% trans "Сохранить" %}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Смена пароля -->
+                        <div class="panel p-4 bg-gray-25 dark:bg-gray-800 rounded">
+                            <h3 class="h5 mb-3">{% trans "Сменить пароль" %}</h3>
+                            <form method="post" action="{% url 'accounts:password_change' %}">
+                                {% csrf_token %}
+                                
+                                <div class="vstack gap-3">
+                                    <div class="form-group">
+                                        <label class="form-label fs-6 fw-medium" for="old_password">{% trans "Текущий пароль" %}</label>
+                                        <input type="password" name="old_password" id="old_password" class="form-control" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label fs-6 fw-medium" for="new_password1">{% trans "Новый пароль" %}</label>
+                                        <input type="password" name="new_password1" id="new_password1" class="form-control" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label fs-6 fw-medium" for="new_password2">{% trans "Подтверждение пароля" %}</label>
+                                        <input type="password" name="new_password2" id="new_password2" class="form-control" required>
+                                    </div>
+                                    
+                                    <div class="hstack justify-end">
+                                        <button type="submit" class="btn btn-primary">{% trans "Сменить пароль" %}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Управление подпиской -->
+                        {% if user.has_active_subscription %}
+                        <div class="panel p-4 bg-gray-25 dark:bg-gray-800 rounded">
+                            <h3 class="h5 mb-3">{% trans "Управление подпиской" %}</h3>
+                            <div class="vstack gap-3">
+                                <div class="hstack justify-between items-center p-3 bg-white dark:bg-gray-900 rounded">
+                                    <div>
+                                        <p class="fw-medium m-0">{% trans "Премиум подписка" %}</p>
+                                        <p class="fs-7 text-gray-500 m-0">
+                                            {% trans "Следующее списание:" %} {{ user.subscription_end_date|date:"d.m.Y" }}
+                                        </p>
+                                    </div>
+                                    <span class="badge bg-success text-white">{% trans "Активна" %}</span>
+                                </div>
+                                <div class="hstack justify-end gap-2">
+                                    <a href="{% url 'accounts:subscription_manage' %}" class="btn btn-outline-gray-500">
+                                        {% trans "Изменить план" %}
+                                    </a>
+                                    <a href="{% url 'accounts:subscription_cancel' %}" class="btn btn-outline-danger">
+                                        {% trans "Отменить подписку" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Настройки уведомлений -->
+                        <div class="panel p-4 bg-gray-25 dark:bg-gray-800 rounded">
+                            <h3 class="h5 mb-3">{% trans "Уведомления" %}</h3>
+                            <form method="post" action="{% url 'accounts:notifications_update' %}">
+                                {% csrf_token %}
+                                
+                                <div class="vstack gap-2">
+                                    <div class="form-check hstack justify-between">
+                                        <label class="form-check-label fs-6" for="newsletter">{% trans "Еженедельная рассылка" %}</label>
+                                        <input type="checkbox" name="newsletter" id="newsletter" class="form-check-input" {% if user.newsletter_subscribed %}checked{% endif %}>
+                                    </div>
+                                    <div class="form-check hstack justify-between">
+                                        <label class="form-check-label fs-6" for="comments_notify">{% trans "Ответы на комментарии" %}</label>
+                                        <input type="checkbox" name="comments_notify" id="comments_notify" class="form-check-input" {% if user.comments_notify %}checked{% endif %}>
+                                    </div>
+                                    
+                                    <div class="hstack justify-end pt-2">
+                                        <button type="submit" class="btn btn-primary">{% trans "Сохранить" %}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Выход -->
+                        <div class="panel p-4 border border-danger rounded">
+                            <div class="hstack justify-between items-center">
+                                <div>
+                                    <h3 class="h6 m-0 text-danger">{% trans "Выйти из аккаунта" %}</h3>
+                                    <p class="fs-7 text-gray-500 m-0">{% trans "Вы будете перенаправлены на главную страницу" %}</p>
+                                </div>
+                                <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger">{% trans "Выйти" %}</a>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

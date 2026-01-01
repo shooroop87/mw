@@ -1,0 +1,99 @@
+{% load static i18n %}
+
+<footer id="uc-footer" class="uc-footer panel uc-dark">
+    <div class="footer-outer py-4 lg:py-6 bg-gray-900 dark:bg-black text-white">
+        <div class="container max-w-xl">
+            <div class="footer-inner vstack gap-4 lg:gap-6">
+                
+                <!-- Footer top -->
+                <div class="uc-footer-top panel">
+                    <div class="row g-4 lg:g-6">
+                        
+                        <!-- Logo & описание -->
+                        <div class="col-12 lg:col-4">
+                            <div class="widget vstack gap-3">
+                                <a href="{% url 'core:home' %}" class="d-inline-block">
+                                    <img class="w-150px" src="{% static 'images/logo-white.svg' %}" alt="MilanWeek">
+                                </a>
+                                <p class="fs-6 text-white text-opacity-70">
+                                    {% trans "Русскоязычный журнал о жизни в Милане и Ломбардии. Практичные гайды, аналитика, советы для экспатов и релокантов." %}
+                                </p>
+                                <ul class="nav-x gap-2">
+                                    <li>
+                                        <a href="#" class="cstack w-36px h-36px rounded-circle bg-white bg-opacity-10 hover:bg-primary transition-all duration-150">
+                                            <i class="icon icon-1 unicon-logo-telegram"></i>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="cstack w-36px h-36px rounded-circle bg-white bg-opacity-10 hover:bg-primary transition-all duration-150">
+                                            <i class="icon icon-1 unicon-logo-instagram"></i>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="cstack w-36px h-36px rounded-circle bg-white bg-opacity-10 hover:bg-primary transition-all duration-150">
+                                            <i class="icon icon-1 unicon-logo-facebook"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Рубрики -->
+                        <div class="col-6 lg:col-2">
+                            <div class="widget vstack gap-3">
+                                <h4 class="fs-6 fw-bold text-uppercase text-white text-opacity-50">{% trans "Рубрики" %}</h4>
+                                <ul class="nav-y gap-2 fs-6 fw-medium">
+                                    {% for category in footer_categories %}
+                                    <li><a href="{{ category.get_absolute_url }}" class="text-white text-opacity-70 hover:text-white">{{ category.name }}</a></li>
+                                    {% empty %}
+                                    <li><a href="#" class="text-white text-opacity-70 hover:text-white">{% trans "Жизнь" %}</a></li>
+                                    <li><a href="#" class="text-white text-opacity-70 hover:text-white">{% trans "Работа" %}</a></li>
+                                    <li><a href="#" class="text-white text-opacity-70 hover:text-white">{% trans "Документы" %}</a></li>
+                                    <li><a href="#" class="text-white text-opacity-70 hover:text-white">{% trans "Ломбардия" %}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- О проекте -->
+                        <div class="col-6 lg:col-2">
+                            <div class="widget vstack gap-3">
+                                <h4 class="fs-6 fw-bold text-uppercase text-white text-opacity-50">{% trans "О проекте" %}</h4>
+                                <ul class="nav-y gap-2 fs-6 fw-medium">
+                                    <li><a href="{% url 'core:about' %}" class="text-white text-opacity-70 hover:text-white">{% trans "О нас" %}</a></li>
+                                    <li><a href="{% url 'core:contact' %}" class="text-white text-opacity-70 hover:text-white">{% trans "Контакты" %}</a></li>
+                                    <li><a href="{% url 'core:faq' %}" class="text-white text-opacity-70 hover:text-white">{% trans "FAQ" %}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Newsletter -->
+                        <div class="col-12 lg:col-4">
+                            <div class="widget vstack gap-3">
+                                <h4 class="fs-6 fw-bold text-uppercase text-white text-opacity-50">{% trans "Рассылка" %}</h4>
+                                <p class="fs-6 text-white text-opacity-70">{% trans "Подпишитесь на еженедельную рассылку о жизни в Милане" %}</p>
+                                <form class="hstack gap-1" method="post" action="{% url 'core:newsletter_subscribe' %}">
+                                    {% csrf_token %}
+                                    <input type="email" name="email" class="form-control form-control-sm bg-white bg-opacity-10 border-0 text-white" placeholder="{% trans 'Email адрес' %}" required>
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "ОК" %}</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer bottom -->
+                <hr class="m-0 border-white border-opacity-10">
+                <div class="uc-footer-bottom panel hstack gap-2 justify-between fs-7 text-white text-opacity-50">
+                    <div class="footer-copyright">
+                        <p>© {% now "Y" %} MilanWeek. {% trans "Все права защищены." %}</p>
+                    </div>
+                    <ul class="nav-x gap-2 fw-medium">
+                        <li><a href="{% url 'core:privacy' %}" class="hover:text-white">{% trans "Конфиденциальность" %}</a></li>
+                        <li><a href="{% url 'core:terms' %}" class="hover:text-white">{% trans "Условия" %}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

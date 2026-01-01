@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "FAQ" %} | MilanWeek{% endblock %}
+
+{% block content %}
+<!-- Breadcrumbs -->
+<div class="breadcrumbs panel z-1 py-2 bg-gray-25 dark:bg-gray-100 dark:bg-opacity-5">
+    <div class="container max-w-xl">
+        <ul class="breadcrumb nav-x justify-center gap-1 fs-7 sm:fs-6 m-0">
+            <li><a href="{% url 'core:home' %}">{% trans "Главная" %}</a></li>
+            <li><i class="unicon-chevron-right opacity-50"></i></li>
+            <li><span class="opacity-50">{% trans "FAQ" %}</span></li>
+        </ul>
+    </div>
+</div>
+
+<div class="section panel py-4 lg:py-6 xl:py-8">
+    <div class="container max-w-lg">
+        <div class="page-wrap panel vstack gap-4 lg:gap-6">
+            
+            <!-- Заголовок -->
+            <header class="page-header panel vstack justify-center gap-2 text-center">
+                <h1 class="h3 lg:h1 m-0">{% trans "Часто задаваемые вопросы" %}</h1>
+                <p class="fs-5 text-gray-500">{% trans "Ответы на популярные вопросы о MilanWeek" %}</p>
+            </header>
+            
+            <!-- FAQ список -->
+            <div class="page-content panel">
+                <ul class="uc-accordion" data-uc-accordion="multiple: true">
+                    
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-5 fw-medium p-3" href="#">
+                            {% trans "Что такое MilanWeek?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300">
+                                {% trans "MilanWeek — это русскоязычный онлайн-журнал о жизни в Милане и регионе Ломбардия. Мы публикуем практичные гайды, аналитические статьи и советы для тех, кто живёт в Италии или планирует переезд." %}
+                            </p>
+                        </div>
+                    </li>
+                    
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-5 fw-medium p-3" href="#">
+                            {% trans "Как работает подписка?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300">
+                                {% trans "Мы используем freemium-модель: первые 3 статьи доступны бесплатно. После этого требуется платная подписка — 3€ в месяц или 30€ в год. Подписка даёт неограниченный доступ ко всем материалам." %}
+                            </p>
+                        </div>
+                    </li>
+                    
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-5 fw-medium p-3" href="#">
+                            {% trans "Как оплатить подписку?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300">
+                                {% trans "Оплата производится через Stripe. Мы принимаем банковские карты Visa, Mastercard, American Express. Подписка автоматически продлевается, вы можете отменить её в любой момент в личном кабинете." %}
+                            </p>
+                        </div>
+                    </li>
+                    
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-5 fw-medium p-3" href="#">
+                            {% trans "Можно ли отменить подписку?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300">
+                                {% trans "Да, вы можете отменить подписку в любое время в личном кабинете. После отмены доступ сохранится до конца оплаченного периода." %}
+                            </p>
+                        </div>
+                    </li>
+                    
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-5 fw-medium p-3" href="#">
+                            {% trans "Как связаться с редакцией?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300">
+                                {% trans "Напишите нам на" %} <a href="mailto:hello@milanweek.ru" class="uc-link">hello@milanweek.ru</a> {% trans "или через форму на странице" %} <a href="{% url 'core:contact' %}" class="uc-link">{% trans "Контакты" %}</a>.
+                            </p>
+                        </div>
+                    </li>
+                    
+                </ul>
+            </div>
+            
+            <!-- CTA -->
+            <div class="panel p-4 lg:p-6 bg-primary-100 dark:bg-gray-800 rounded text-center">
+                <h3 class="h5 m-0 mb-2">{% trans "Не нашли ответ?" %}</h3>
+                <p class="fs-6 text-gray-600 dark:text-gray-300 mb-3">{% trans "Свяжитесь с нами, и мы поможем разобраться" %}</p>
+                <a href="{% url 'core:contact' %}" class="btn btn-primary">{% trans "Написать нам" %}</a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

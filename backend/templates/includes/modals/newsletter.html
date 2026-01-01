@@ -1,0 +1,30 @@
+{% load static i18n %}
+
+<div id="uc-newsletter-modal" data-uc-modal="overlay: true">
+    <div class="uc-modal-dialog w-800px bg-white text-dark dark:bg-gray-900 dark:text-white rounded overflow-hidden">
+        <button class="uc-modal-close-default p-0 icon-3 btn border-0 dark:text-white dark:text-opacity-50 hover:text-primary hover:rotate-90 duration-150 transition-all" type="button">
+            <i class="unicon-close"></i>
+        </button>
+        <div class="row md:child-cols-6 col-match g-0">
+            <div class="d-none md:d-flex">
+                <div class="position-relative w-100 ratio-1x1">
+                    <img class="media-cover" src="{% static 'images/newsletter-bg.jpg' %}" alt="Newsletter">
+                </div>
+            </div>
+            <div>
+                <div class="panel vstack self-center p-4 md:py-8 text-center">
+                    <h3 class="h3 md:h2">{% trans "Подпишитесь на рассылку" %}</h3>
+                    <p class="ft-tertiary">{% trans "Присоединяйтесь к 1000+ читателей. Получайте лучшие статьи о жизни в Милане." %}</p>
+                    <div class="panel mt-2 lg:mt-4">
+                        <form class="vstack gap-1" method="post" action="{% url 'core:newsletter_subscribe' %}">
+                            {% csrf_token %}
+                            <input type="email" name="email" class="form-control form-control-sm w-full fs-6 bg-white dark:border-gray-700 dark:text-dark" placeholder="{% trans 'Ваш email...' %}" required>
+                            <button type="submit" class="btn btn-sm btn-primary">{% trans "Подписаться" %}</button>
+                        </form>
+                        <p class="fs-7 mt-2">{% trans "Никакого спама, только полезный контент!" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

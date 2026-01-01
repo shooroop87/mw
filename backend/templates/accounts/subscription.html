@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Подписка" %} | MilanWeek{% endblock %}
+
+{% block content %}
+<!-- Breadcrumbs -->
+<div class="breadcrumbs panel z-1 py-2 bg-gray-25 dark:bg-gray-100 dark:bg-opacity-5">
+    <div class="container max-w-xl">
+        <ul class="breadcrumb nav-x justify-center gap-1 fs-7 sm:fs-6 m-0">
+            <li><a href="{% url 'core:home' %}">{% trans "Главная" %}</a></li>
+            <li><i class="unicon-chevron-right opacity-50"></i></li>
+            <li><span class="opacity-50">{% trans "Подписка" %}</span></li>
+        </ul>
+    </div>
+</div>
+
+<div class="section panel py-6 lg:py-9">
+    <div class="container max-w-lg">
+        <div class="panel vstack gap-6">
+            
+            <!-- Заголовок -->
+            <header class="text-center">
+                <h1 class="h2 lg:h1 m-0">{% trans "Оформить подписку" %}</h1>
+                <p class="fs-5 text-gray-500 mt-2">{% trans "Получите неограниченный доступ ко всем материалам MilanWeek" %}</p>
+            </header>
+            
+            <!-- Планы -->
+            <div class="row g-4 justify-center">
+                
+                <!-- Месячная подписка -->
+                <div class="col-12 sm:col-6 lg:col-5">
+                    <div class="panel p-4 lg:p-6 bg-gray-25 dark:bg-gray-800 rounded h-100 vstack">
+                        <div class="vstack gap-2 flex-1">
+                            <h3 class="h5 m-0">{% trans "Месячная" %}</h3>
+                            <div class="hstack items-end gap-1">
+                                <span class="display-6 fw-bold">3€</span>
+                                <span class="fs-6 text-gray-500 mb-1">/{% trans "месяц" %}</span>
+                            </div>
+                            <p class="fs-6 text-gray-500">{% trans "Идеально для знакомства" %}</p>
+                            
+                            <hr class="my-3">
+                            
+                            <ul class="vstack gap-2 fs-6">
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark text-success"></i>
+                                    <span>{% trans "Неограниченный доступ к статьям" %}</span>
+                                </li>
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark text-success"></i>
+                                    <span>{% trans "Без рекламы" %}</span>
+                                </li>
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark text-success"></i>
+                                    <span>{% trans "Комментирование" %}</span>
+                                </li>
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark text-success"></i>
+                                    <span>{% trans "Отмена в любой момент" %}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <form action="{% url 'accounts:checkout' %}" method="post" class="mt-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="plan" value="monthly">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                {% trans "Выбрать" %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Годовая подписка -->
+                <div class="col-12 sm:col-6 lg:col-5">
+                    <div class="panel p-4 lg:p-6 bg-primary text-white rounded h-100 vstack position-relative overflow-hidden">
+                        <!-- Бейдж -->
+                        <span class="position-absolute top-0 end-0 bg-warning text-dark fs-7 fw-bold px-2 py-1">
+                            {% trans "ВЫГОДНО" %}
+                        </span>
+                        
+                        <div class="vstack gap-2 flex-1">
+                            <h3 class="h5 m-0">{% trans "Годовая" %}</h3>
+                            <div class="hstack items-end gap-1">
+                                <span class="display-6 fw-bold">30€</span>
+                                <span class="fs-6 text-white text-opacity-70 mb-1">/{% trans "год" %}</span>
+                            </div>
+                            <p class="fs-6 text-white text-opacity-70">
+                                {% trans "Экономия 17%" %} <s class="text-opacity-50">36€</s>
+                            </p>
+                            
+                            <hr class="my-3 border-white border-opacity-20">
+                            
+                            <ul class="vstack gap-2 fs-6">
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark"></i>
+                                    <span>{% trans "Всё из месячной подписки" %}</span>
+                                </li>
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark"></i>
+                                    <span>{% trans "2 месяца бесплатно" %}</span>
+                                </li>
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark"></i>
+                                    <span>{% trans "Приоритетная поддержка" %}</span>
+                                </li>
+                                <li class="hstack gap-2">
+                                    <i class="unicon-checkmark"></i>
+                                    <span>{% trans "Эксклюзивные материалы" %}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <form action="{% url 'accounts:checkout' %}" method="post" class="mt-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="plan" value="yearly">
+                            <button type="submit" class="btn btn-white text-primary w-100">
+                                {% trans "Выбрать" %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Преимущества -->
+            <div class="panel p-4 lg:p-6 bg-gray-25 dark:bg-gray-800 rounded">
+                <h3 class="h5 text-center mb-4">{% trans "Что вы получаете" %}</h3>
+                <div class="row g-4">
+                    <div class="col-12 sm:col-4 text-center">
+                        <i class="unicon-document icon-3 text-primary mb-2"></i>
+                        <h4 class="h6 m-0">{% trans "Все статьи" %}</h4>
+                        <p class="fs-7 text-gray-500 m-0 mt-1">{% trans "Доступ ко всему архиву и новым материалам" %}</p>
+                    </div>
+                    <div class="col-12 sm:col-4 text-center">
+                        <i class="unicon-ban icon-3 text-primary mb-2"></i>
+                        <h4 class="h6 m-0">{% trans "Без рекламы" %}</h4>
+                        <p class="fs-7 text-gray-500 m-0 mt-1">{% trans "Чистый контент без отвлекающих баннеров" %}</p>
+                    </div>
+                    <div class="col-12 sm:col-4 text-center">
+                        <i class="unicon-heart icon-3 text-primary mb-2"></i>
+                        <h4 class="h6 m-0">{% trans "Поддержка" %}</h4>
+                        <p class="fs-7 text-gray-500 m-0 mt-1">{% trans "Вы помогаете развивать независимую журналистику" %}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAQ -->
+            <div class="panel">
+                <h3 class="h5 text-center mb-4">{% trans "Частые вопросы" %}</h3>
+                <ul class="uc-accordion" data-uc-accordion="multiple: true">
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-6 fw-medium p-3" href="#">
+                            {% trans "Как оплатить подписку?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300 m-0">
+                                {% trans "Мы принимаем карты Visa, Mastercard и American Express через защищённую платёжную систему Stripe." %}
+                            </p>
+                        </div>
+                    </li>
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-6 fw-medium p-3" href="#">
+                            {% trans "Можно ли отменить подписку?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300 m-0">
+                                {% trans "Да, вы можете отменить подписку в любой момент в личном кабинете. Доступ сохранится до конца оплаченного периода." %}
+                            </p>
+                        </div>
+                    </li>
+                    <li class="panel bg-gray-25 dark:bg-gray-800 rounded mb-2">
+                        <a class="uc-accordion-title fs-6 fw-medium p-3" href="#">
+                            {% trans "Есть ли возврат средств?" %}
+                        </a>
+                        <div class="uc-accordion-content px-3 pb-3">
+                            <p class="fs-6 text-gray-600 dark:text-gray-300 m-0">
+                                {% trans "Да, в течение 14 дней после оплаты вы можете запросить полный возврат средств без объяснения причин." %}
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Гарантия -->
+            <div class="text-center">
+                <p class="fs-6 text-gray-500 m-0">
+                    <i class="unicon-lock me-1"></i>
+                    {% trans "Безопасная оплата через Stripe. Ваши данные защищены." %}
+                </p>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

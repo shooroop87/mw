@@ -1,0 +1,134 @@
+{% load static i18n %}
+
+<aside class="sidebar panel vstack gap-4 lg:gap-6">
+    
+    <!-- Поиск -->
+    <div class="widget search-widget panel p-3 bg-gray-25 dark:bg-gray-800 rounded">
+        <form action="{% url 'blog:search' %}" method="get">
+            <div class="form-icon-group">
+                <input type="search" name="q" class="form-control form-control-sm fs-6" placeholder="{% trans 'Поиск...' %}" value="{{ request.GET.q }}">
+                <span class="form-icon">
+                    <i class="unicon-search icon-1"></i>
+                </span>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Категории -->
+    <div class="widget categories-widget panel vstack gap-3">
+        <h4 class="widget-title h6 m-0 text-uppercase">{% trans "Рубрики" %}</h4>
+        <ul class="nav-y gap-1 fs-6">
+            {% for category in sidebar_categories %}
+            <li>
+                <a href="{{ category.get_absolute_url }}" class="hstack justify-between text-none text-gray-600 dark:text-gray-300 hover:text-primary py-1">
+                    <span>{{ category.name }}</span>
+                    <span class="badge bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-pill">{{ category.posts_count }}</span>
+                </a>
+            </li>
+            {% empty %}
+            <li class="text-gray-500">{% trans "Нет рубрик" %}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <!-- Популярные статьи -->
+    <div class="widget popular-widget panel vstack gap-3">
+        <h4 class="widget-title h6 m-0 text-uppercase">{% trans "Популярное" %}</h4>
+        <div class="vstack gap-3">
+            {% for post in popular_posts %}
+            <article class="post type-post panel uc-transition-toggle">
+                <div class="row g-2">
+                    <div class="col-4">
+                        <div class="post-media panel overflow-hidden ratio ratio-1x1 rounded">
+                            <div class="featured-image bg-gray-25 dark:bg-gray-800">
+                                {% if post.image %}
+                                <img class="media-cover image uc-transition-scale-up uc-transition-opaque" 
+                                     src="{% static 'images/img-fallback.png' %}" 
+                                     data-src="{{ post.image.url }}" 
+                                     alt="{{ post.title }}" 
+                                     data-uc-img="loading: lazy">
+                                {% else %}
+                                <img class="media-cover image" src="{% static 'images/img-fallback.png' %}" alt="{{ post.title }}">
+                                {% endif %}
+                            </div>
+                            <a href="{{ post.get_absolute_url }}" class="position-cover"></a>
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        <div class="post-header panel vstack gap-narrow">
+                            <h5 class="post-title h6 m-0 text-truncate-2">
+                                <a class="text-none hover:text-primary duration-150" href="{{ post.get_absolute_url }}">
+                                    {{ post.title }}
+                                </a>
+                            </h5>
+                            <div class="post-meta fs-7 text-gray-500">
+                                {{ post.published_at|date:"d M Y" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <p class="text-gray-500 fs-6">{% trans "Нет статей" %}</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Теги -->
+    {% if sidebar_tags %}
+    <div class="widget tags-widget panel vstack gap-3">
+        <h4 class="widget-title h6 m-0 text-uppercase">{% trans "Теги" %}</h4>
+        <div class="hstack gap-1 flex-wrap">
+            {% for tag in sidebar_tags %}
+            <a href="{% url 'blog:tag' tag.slug %}" class="btn btn-xs btn-outline-gray-300 dark:btn-outline-gray-600 rounded-pill">
+                {{ tag.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Newsletter -->
+    <div class="widget newsletter-widget panel p-4 bg-primary-100 dark:bg-gray-800 rounded">
+        <div class="vstack gap-2 text-center">
+            <i class="unicon-email icon-3 text-primary"></i>
+            <h4 class="h6 m-0">{% trans "Рассылка" %}</h4>
+            <p class="fs-7 text-gray-600 dark:text-gray-400">{% trans "Получайте лучшие статьи на почту" %}</p>
+            <form method="post" action="{% url 'core:newsletter_subscribe' %}">
+                {% csrf_token %}
+                <div class="vstack gap-1">
+                    <input type="email" name="email" class="form-control form-control-sm" placeholder="{% trans 'Email' %}" required>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">{% trans "Подписаться" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Соцсети -->
+    <div class="widget social-widget panel vstack gap-3">
+        <h4 class="widget-title h6 m-0 text-uppercase">{% trans "Мы в соцсетях" %}</h4>
+        <ul class="nav-x gap-2">
+            <li>
+                <a href="#" class="cstack w-40px h-40px rounded-circle bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white transition-all duration-150">
+                    <i class="icon icon-1 unicon-logo-telegram"></i>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="cstack w-40px h-40px rounded-circle bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white transition-all duration-150">
+                    <i class="icon icon-1 unicon-logo-instagram"></i>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="cstack w-40px h-40px rounded-circle bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white transition-all duration-150">
+                    <i class="icon icon-1 unicon-logo-facebook"></i>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="cstack w-40px h-40px rounded-circle bg-gray-100 dark:bg-gray-800 hover:bg-primary hover:text-white transition-all duration-150">
+                    <i class="icon icon-1 unicon-logo-vk"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+</aside>

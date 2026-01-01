@@ -1,0 +1,70 @@
+{% load static i18n %}
+
+<div id="uc-menu-panel" data-uc-offcanvas="overlay: true;">
+    <div class="uc-offcanvas-bar bg-white text-dark dark:bg-gray-900 dark:text-white">
+        <header class="uc-offcanvas-header hstack justify-between items-center pb-4 bg-white dark:bg-gray-900">
+            <div class="uc-logo">
+                <a href="{% url 'core:home' %}" class="h5 text-none text-gray-900 dark:text-white">
+                    <img class="w-32px" src="{% static 'images/logo-icon.svg' %}" alt="MilanWeek" data-uc-svg>
+                </a>
+            </div>
+            <button class="uc-offcanvas-close p-0 icon-3 btn border-0 dark:text-white dark:text-opacity-50 hover:text-primary hover:rotate-90 duration-150 transition-all" type="button">
+                <i class="unicon-close"></i>
+            </button>
+        </header>
+
+        <div class="panel">
+            <!-- Поиск -->
+            <form class="form-icon-group vstack gap-1 mb-3" action="{% url 'blog:search' %}" method="get">
+                <input type="search" name="q" class="form-control form-control-md fs-6" placeholder="{% trans 'Поиск...' %}">
+                <span class="form-icon text-gray">
+                    <i class="unicon-search icon-1"></i>
+                </span>
+            </form>
+            
+            <!-- Навигация -->
+            <ul class="nav-y gap-narrow fw-bold fs-5" data-uc-nav>
+                <li><a href="{% url 'core:home' %}">{% trans "Главная" %}</a></li>
+                
+                {% for category in categories %}
+                <li><a href="{{ category.get_absolute_url }}">{{ category.name }}</a></li>
+                {% empty %}
+                <li><a href="#">{% trans "Жизнь" %}</a></li>
+                <li><a href="#">{% trans "Работа" %}</a></li>
+                <li><a href="#">{% trans "Документы" %}</a></li>
+                <li><a href="#">{% trans "Ломбардия" %}</a></li>
+                {% endfor %}
+                
+                <li class="hr opacity-10 my-1"></li>
+                
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'accounts:profile' %}">{% trans "Профиль" %}</a></li>
+                <li><a href="{% url 'accounts:logout' %}">{% trans "Выйти" %}</a></li>
+                {% else %}
+                <li><a href="{% url 'accounts:login' %}">{% trans "Войти" %}</a></li>
+                <li><a href="{% url 'accounts:signup' %}">{% trans "Регистрация" %}</a></li>
+                {% endif %}
+            </ul>
+            
+            <!-- Соцсети -->
+            <ul class="social-icons nav-x mt-4 gap-2">
+                <li><a href="#"><i class="unicon-logo-telegram icon-2"></i></a></li>
+                <li><a href="#"><i class="unicon-logo-instagram icon-2"></i></a></li>
+                <li><a href="#"><i class="unicon-logo-facebook icon-2"></i></a></li>
+            </ul>
+            
+            <!-- Dark mode -->
+            <div class="py-2 hstack gap-2 mt-4 bg-white dark:bg-gray-900" data-uc-sticky="position: bottom">
+                <div class="vstack gap-1">
+                    <span class="fs-7 opacity-60">{% trans "Тема:" %}</span>
+                    <div class="darkmode-trigger" data-darkmode-switch="">
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider fs-5"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

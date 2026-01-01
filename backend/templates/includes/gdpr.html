@@ -1,0 +1,15 @@
+{% load static i18n %}
+
+<div id="uc-gdpr-notification" class="uc-gdpr-notification uc-notification uc-notification-bottom-left lg:m-2">
+    <div class="uc-notification-message">
+        <a id="uc-close-gdpr-notification" class="uc-notification-close" data-uc-close></a>
+        <h2 class="h5 ft-primary fw-bold -ls-1 m-0">{% trans "Cookies" %}</h2>
+        <p class="fs-7 mt-1 mb-2">
+            {% trans "Мы используем cookies для улучшения работы сайта. Продолжая использовать сайт, вы соглашаетесь с" %}
+            <a href="{% url 'core:privacy' %}" class="uc-link text-underline">{% trans "Политикой конфиденциальности" %}</a>
+            {% trans "и" %}
+            <a href="{% url 'core:terms' %}" class="uc-link text-underline">{% trans "Условиями использования" %}</a>.
+        </p>
+        <button class="btn btn-sm btn-primary" id="uc-accept-gdpr">{% trans "Принять" %}</button>
+    </div>
+</div>
