@@ -23,9 +23,11 @@ else:
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
+    "http://localhost:2000",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
     "http://localhost:8000",
+    "http://127.0.0.1:2000",
     "http://127.0.0.1:8000",
     "https://milanweek.ru",
     "https://www.milanweek.ru",
@@ -92,7 +94,7 @@ MIDDLEWARE = [
 if DEBUG:
     MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
 
-ROOT_URLCONF = "config.urls"
+ROOT_URLCONF = "milanweek.urls"
 
 TEMPLATES_DIR = BASE_DIR / "templates"
 TEMPLATES = [
@@ -136,7 +138,7 @@ else:
             "USER": os.getenv("POSTGRES_USER", "milanweek_user"),
             "PASSWORD": os.getenv("POSTGRES_PASSWORD", "milanweek_password"),
             "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+            "PORT": os.getenv("POSTGRES_PORT", "5440"),
         }
     }
 
